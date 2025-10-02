@@ -2,6 +2,7 @@ package com.govtech.chinesescramble.controller;
 
 import com.govtech.chinesescramble.dto.request.AnswerSubmissionRequest;
 import com.govtech.chinesescramble.dto.request.GameStartRequest;
+import com.govtech.chinesescramble.entity.Player;
 import com.govtech.chinesescramble.service.SentenceGameService;
 import com.govtech.chinesescramble.service.PlayerService;
 import jakarta.validation.Valid;
@@ -56,9 +57,16 @@ public class SentenceGameController {
                             var newPlayer = playerService.registerPlayer(playerId, playerId + "@game.local", "password123");
                             playerIdLong = newPlayer.getId();
                             log.info("Auto-created player: {} with ID: {}", playerId, playerIdLong);
-                        } catch (Exception ex) {
-                            log.error("Failed to auto-create player: {}", playerId, ex);
-                            return ResponseEntity.badRequest().body(Map.of("error", "Failed to create player: " + playerId));
+                        } catch (IllegalArgumentException ex) {
+                            // Player was created by another request, fetch it
+                            if (ex.getMessage() != null && ex.getMessage().contains("already exists")) {
+                                player = playerService.getPlayerByUsername(playerId);
+                                playerIdLong = player.map(Player::getId).orElse(1L);
+                                log.info("Player {} already exists with ID: {}", playerId, playerIdLong);
+                            } else {
+                                log.error("Failed to auto-create player: {}", playerId, ex);
+                                return ResponseEntity.badRequest().body(Map.of("error", "Failed to create player: " + playerId));
+                            }
                         }
                     } else {
                         playerIdLong = player.get().getId();
@@ -80,29 +88,38 @@ public class SentenceGameController {
      */
     @PostMapping("/submit")
     public ResponseEntity<?> submitAnswer(
-        @RequestParam String playerId,
+        @RequestParam(required = false) String playerId,
         @Valid @RequestBody AnswerSubmissionRequest request
     ) {
         try {
-            // Try to parse as Long first (player ID)
-            Long playerIdLong;
-            try {
-                playerIdLong = Long.parseLong(playerId);
-            } catch (NumberFormatException e) {
-                // It's a username, look up or create the player
-                var player = playerService.getPlayerByUsername(playerId);
-                if (player.isEmpty()) {
-                    // Auto-create player with this username
-                    try {
-                        var newPlayer = playerService.registerPlayer(playerId, playerId + "@game.local", "password123");
-                        playerIdLong = newPlayer.getId();
-                        log.info("Auto-created player: {} with ID: {}", playerId, playerIdLong);
-                    } catch (Exception ex) {
-                        log.error("Failed to auto-create player: {}", playerId, ex);
-                        return ResponseEntity.badRequest().body(Map.of("error", "Failed to create player: " + playerId));
+            // Resolve player ID from playerId parameter or use default
+            Long playerIdLong = 1L;
+            if (playerId != null && !playerId.isEmpty()) {
+                try {
+                    playerIdLong = Long.parseLong(playerId);
+                } catch (NumberFormatException e) {
+                    // It's a username, look up or create the player
+                    var player = playerService.getPlayerByUsername(playerId);
+                    if (player.isEmpty()) {
+                        // Auto-create player with this username
+                        try {
+                            var newPlayer = playerService.registerPlayer(playerId, playerId + "@game.local", "password123");
+                            playerIdLong = newPlayer.getId();
+                            log.info("Auto-created player: {} with ID: {}", playerId, playerIdLong);
+                        } catch (IllegalArgumentException ex) {
+                            // Player was created by another request, fetch it
+                            if (ex.getMessage() != null && ex.getMessage().contains("already exists")) {
+                                player = playerService.getPlayerByUsername(playerId);
+                                playerIdLong = player.map(Player::getId).orElse(1L);
+                                log.info("Player {} already exists with ID: {}", playerId, playerIdLong);
+                            } else {
+                                log.error("Failed to auto-create player: {}", playerId, ex);
+                                return ResponseEntity.badRequest().body(Map.of("error", "Failed to create player: " + playerId));
+                            }
+                        }
+                    } else {
+                        playerIdLong = player.get().getId();
                     }
-                } else {
-                    playerIdLong = player.get().getId();
                 }
             }
 
@@ -124,29 +141,38 @@ public class SentenceGameController {
      */
     @PostMapping("/hint/{level}")
     public ResponseEntity<?> getHint(
-        @RequestParam String playerId,
+        @RequestParam(required = false) String playerId,
         @PathVariable Integer level
     ) {
         try {
-            // Try to parse as Long first (player ID)
-            Long playerIdLong;
-            try {
-                playerIdLong = Long.parseLong(playerId);
-            } catch (NumberFormatException e) {
-                // It's a username, look up or create the player
-                var player = playerService.getPlayerByUsername(playerId);
-                if (player.isEmpty()) {
-                    // Auto-create player with this username
-                    try {
-                        var newPlayer = playerService.registerPlayer(playerId, playerId + "@game.local", "password123");
-                        playerIdLong = newPlayer.getId();
-                        log.info("Auto-created player: {} with ID: {}", playerId, playerIdLong);
-                    } catch (Exception ex) {
-                        log.error("Failed to auto-create player: {}", playerId, ex);
-                        return ResponseEntity.badRequest().body(Map.of("error", "Failed to create player: " + playerId));
+            // Resolve player ID from playerId parameter or use default
+            Long playerIdLong = 1L;
+            if (playerId != null && !playerId.isEmpty()) {
+                try {
+                    playerIdLong = Long.parseLong(playerId);
+                } catch (NumberFormatException e) {
+                    // It's a username, look up or create the player
+                    var player = playerService.getPlayerByUsername(playerId);
+                    if (player.isEmpty()) {
+                        // Auto-create player with this username
+                        try {
+                            var newPlayer = playerService.registerPlayer(playerId, playerId + "@game.local", "password123");
+                            playerIdLong = newPlayer.getId();
+                            log.info("Auto-created player: {} with ID: {}", playerId, playerIdLong);
+                        } catch (IllegalArgumentException ex) {
+                            // Player was created by another request, fetch it
+                            if (ex.getMessage() != null && ex.getMessage().contains("already exists")) {
+                                player = playerService.getPlayerByUsername(playerId);
+                                playerIdLong = player.map(Player::getId).orElse(1L);
+                                log.info("Player {} already exists with ID: {}", playerId, playerIdLong);
+                            } else {
+                                log.error("Failed to auto-create player: {}", playerId, ex);
+                                return ResponseEntity.badRequest().body(Map.of("error", "Failed to create player: " + playerId));
+                            }
+                        }
+                    } else {
+                        playerIdLong = player.get().getId();
                     }
-                } else {
-                    playerIdLong = player.get().getId();
                 }
             }
 
