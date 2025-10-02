@@ -59,7 +59,7 @@ public class IdiomScore extends BaseEntity {
      * Example: "画蛇添足" (huà shé tiān zú - to ruin the effect by adding something superfluous)
      * Length: typically 4 characters, max 20 for rare longer idioms
      */
-    @Column(nullable = false, length = 20, columnDefinition = "VARCHAR(20) CHARACTER SET utf8mb4")
+    @Column(nullable = false, length = 20)
     private String idiom;
 
     /**

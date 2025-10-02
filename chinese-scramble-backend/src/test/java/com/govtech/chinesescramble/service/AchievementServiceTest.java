@@ -17,8 +17,11 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 /**
  * Test class for AchievementService
@@ -27,6 +30,7 @@ import static org.mockito.Mockito.*;
  * @version 1.0.0
  */
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class AchievementServiceTest {
 
     @Mock
@@ -44,6 +48,9 @@ class AchievementServiceTest {
     @Mock
     private LeaderboardRepository leaderboardRepository;
 
+    @Mock
+    private com.fasterxml.jackson.databind.ObjectMapper objectMapper;
+
     @InjectMocks
     private AchievementService achievementService;
 
@@ -54,6 +61,13 @@ class AchievementServiceTest {
         testPlayer = createPlayer(1L, "achiever");
         reset(achievementRepository, playerRepository, idiomScoreRepository,
               sentenceScoreRepository, leaderboardRepository);
+
+        // Default stub: all achievement types return false (not yet unlocked)
+        // This prevents strict stubbing violations when checkAndUnlockAchievements() checks all achievement types
+        when(achievementRepository.existsByPlayerIdAndAchievementType(anyLong(), anyString()))
+            .thenReturn(false);
+        when(achievementRepository.save(any(Achievement.class)))
+            .thenAnswer(invocation -> invocation.getArgument(0));
     }
 
     @Test
@@ -68,10 +82,6 @@ class AchievementServiceTest {
         when(playerRepository.findById(playerId)).thenReturn(Optional.of(testPlayer));
         when(idiomScoreRepository.countCompletedGamesByPlayer(playerId)).thenReturn(1L);
         when(sentenceScoreRepository.countCompletedGamesByPlayer(playerId)).thenReturn(0L);
-        when(achievementRepository.existsByPlayerIdAndAchievementType(playerId, "FIRST_WIN"))
-            .thenReturn(false);
-        when(achievementRepository.save(any(Achievement.class)))
-            .thenAnswer(invocation -> invocation.getArgument(0));
 
         // When
         List<Achievement> achievements = achievementService
@@ -93,12 +103,8 @@ class AchievementServiceTest {
         Integer hintsUsed = 0;
 
         when(playerRepository.findById(playerId)).thenReturn(Optional.of(testPlayer));
-        when(achievementRepository.existsByPlayerIdAndAchievementType(playerId, "SPEED_DEMON"))
-            .thenReturn(false);
         when(idiomScoreRepository.countCompletedGamesByPlayer(playerId)).thenReturn(1L);
         when(sentenceScoreRepository.countCompletedGamesByPlayer(playerId)).thenReturn(0L);
-        when(achievementRepository.save(any(Achievement.class)))
-            .thenAnswer(invocation -> invocation.getArgument(0));
 
         // When
         List<Achievement> achievements = achievementService
@@ -118,12 +124,8 @@ class AchievementServiceTest {
         Integer hintsUsed = 0;
 
         when(playerRepository.findById(playerId)).thenReturn(Optional.of(testPlayer));
-        when(achievementRepository.existsByPlayerIdAndAchievementType(playerId, "PERFECT_SCORE"))
-            .thenReturn(false);
         when(idiomScoreRepository.countCompletedGamesByPlayer(playerId)).thenReturn(1L);
         when(sentenceScoreRepository.countCompletedGamesByPlayer(playerId)).thenReturn(0L);
-        when(achievementRepository.save(any(Achievement.class)))
-            .thenAnswer(invocation -> invocation.getArgument(0));
 
         // When
         List<Achievement> achievements = achievementService
@@ -143,12 +145,8 @@ class AchievementServiceTest {
         Integer hintsUsed = 0;
 
         when(playerRepository.findById(playerId)).thenReturn(Optional.of(testPlayer));
-        when(achievementRepository.existsByPlayerIdAndAchievementType(playerId, "HIGH_SCORER"))
-            .thenReturn(false);
         when(idiomScoreRepository.countCompletedGamesByPlayer(playerId)).thenReturn(1L);
         when(sentenceScoreRepository.countCompletedGamesByPlayer(playerId)).thenReturn(0L);
-        when(achievementRepository.save(any(Achievement.class)))
-            .thenAnswer(invocation -> invocation.getArgument(0));
 
         // When
         List<Achievement> achievements = achievementService
@@ -228,10 +226,6 @@ class AchievementServiceTest {
         when(playerRepository.findById(playerId)).thenReturn(Optional.of(testPlayer));
         when(idiomScoreRepository.countCompletedGamesByPlayer(playerId)).thenReturn(60L);
         when(sentenceScoreRepository.countCompletedGamesByPlayer(playerId)).thenReturn(40L); // Total: 100
-        when(achievementRepository.existsByPlayerIdAndAchievementType(playerId, "HUNDRED_GAMES"))
-            .thenReturn(false);
-        when(achievementRepository.save(any(Achievement.class)))
-            .thenAnswer(invocation -> invocation.getArgument(0));
 
         // When
         List<Achievement> achievements = achievementService
@@ -249,10 +243,6 @@ class AchievementServiceTest {
         when(playerRepository.findById(playerId)).thenReturn(Optional.of(testPlayer));
         when(idiomScoreRepository.countCompletedGamesByPlayer(playerId)).thenReturn(50L);
         when(sentenceScoreRepository.countCompletedGamesByPlayer(playerId)).thenReturn(30L); // Total: 80
-        when(achievementRepository.existsByPlayerIdAndAchievementType(eq(playerId), any(String.class)))
-            .thenReturn(false);
-        when(achievementRepository.save(any(Achievement.class)))
-            .thenAnswer(invocation -> invocation.getArgument(0));
 
         // When
         List<Achievement> achievements = achievementService

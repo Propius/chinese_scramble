@@ -52,15 +52,19 @@ class PlayerRepositoryTest {
         entityManager.flush();
         entityManager.clear();
 
-        // Create test players
+        // Create test players with explicit timestamps (required for direct entityManager.persist)
+        LocalDateTime now = LocalDateTime.now();
+
         testPlayer1 = Player.builder()
             .username("玩家001")
             .email("player1@test.com")
             .passwordHash("$2a$10$hashedpassword1")
             .role(UserRole.PLAYER)
             .active(true)
-            .lastLoginAt(LocalDateTime.now().minusDays(1))
+            .lastLoginAt(now.minusDays(1))
             .build();
+        testPlayer1.setCreatedAt(now.minusDays(7));
+        testPlayer1.setUpdatedAt(now.minusDays(1));
 
         testPlayer2 = Player.builder()
             .username("张伟")
@@ -68,8 +72,10 @@ class PlayerRepositoryTest {
             .passwordHash("$2a$10$hashedpassword2")
             .role(UserRole.ADMIN)
             .active(true)
-            .lastLoginAt(LocalDateTime.now().minusHours(2))
+            .lastLoginAt(now.minusHours(2))
             .build();
+        testPlayer2.setCreatedAt(now.minusDays(5));
+        testPlayer2.setUpdatedAt(now.minusHours(2));
 
         testPlayer3 = Player.builder()
             .username("inactivePlayer")
@@ -79,6 +85,8 @@ class PlayerRepositoryTest {
             .active(false)
             .lastLoginAt(null)
             .build();
+        testPlayer3.setCreatedAt(now.minusDays(30));
+        testPlayer3.setUpdatedAt(now.minusDays(30));
 
         entityManager.persist(testPlayer1);
         entityManager.persist(testPlayer2);
@@ -251,6 +259,7 @@ class PlayerRepositoryTest {
     @DisplayName("Should save player with Chinese username")
     void testSavePlayerWithChineseUsername() {
         // Given
+        LocalDateTime now = LocalDateTime.now();
         Player chinesePlayer = Player.builder()
             .username("李娜")
             .email("lina@test.com")
@@ -258,6 +267,8 @@ class PlayerRepositoryTest {
             .role(UserRole.PLAYER)
             .active(true)
             .build();
+        chinesePlayer.setCreatedAt(now);
+        chinesePlayer.setUpdatedAt(now);
 
         // When
         Player saved = playerRepository.save(chinesePlayer);
@@ -293,6 +304,7 @@ class PlayerRepositoryTest {
     @DisplayName("Should enforce unique constraints")
     void testUniqueConstraints() {
         // Given
+        LocalDateTime now = LocalDateTime.now();
         Player duplicateUsername = Player.builder()
             .username("玩家001") // Duplicate
             .email("unique@test.com")
@@ -300,6 +312,8 @@ class PlayerRepositoryTest {
             .role(UserRole.PLAYER)
             .active(true)
             .build();
+        duplicateUsername.setCreatedAt(now);
+        duplicateUsername.setUpdatedAt(now);
 
         // When/Then - Should throw exception on flush
         entityManager.persist(duplicateUsername);

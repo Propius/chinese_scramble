@@ -50,7 +50,8 @@ class IdiomScoreRepositoryTest {
         entityManager.flush();
         entityManager.clear();
 
-        // Create test player
+        // Create test player with explicit timestamps
+        LocalDateTime now = LocalDateTime.now();
         testPlayer = Player.builder()
             .username("玩家001")
             .email("player@test.com")
@@ -58,9 +59,11 @@ class IdiomScoreRepositoryTest {
             .role(UserRole.PLAYER)
             .active(true)
             .build();
+        testPlayer.setCreatedAt(now.minusDays(7));
+        testPlayer.setUpdatedAt(now);
         entityManager.persist(testPlayer);
 
-        // Create test scores
+        // Create test scores with explicit timestamps
         score1 = IdiomScore.builder()
             .player(testPlayer)
             .idiom("一马当先")
@@ -71,6 +74,8 @@ class IdiomScoreRepositoryTest {
             .accuracyRate(1.0)
             .completed(true)
             .build();
+        score1.setCreatedAt(now.minusHours(3));
+        score1.setUpdatedAt(now.minusHours(3));
 
         score2 = IdiomScore.builder()
             .player(testPlayer)
@@ -82,6 +87,8 @@ class IdiomScoreRepositoryTest {
             .accuracyRate(0.92)
             .completed(true)
             .build();
+        score2.setCreatedAt(now.minusHours(2));
+        score2.setUpdatedAt(now.minusHours(2));
 
         score3 = IdiomScore.builder()
             .player(testPlayer)
@@ -93,6 +100,8 @@ class IdiomScoreRepositoryTest {
             .accuracyRate(1.0)
             .completed(true)
             .build();
+        score3.setCreatedAt(now.minusHours(1));
+        score3.setUpdatedAt(now.minusHours(1));
 
         entityManager.persist(score1);
         entityManager.persist(score2);

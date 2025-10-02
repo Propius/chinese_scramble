@@ -35,6 +35,7 @@ class GameSessionRepositoryTest {
 
     @BeforeEach
     void setUp() {
+        LocalDateTime now = LocalDateTime.now();
         testPlayer = Player.builder()
             .username("gamer")
             .email("gamer@test.com")
@@ -42,6 +43,8 @@ class GameSessionRepositoryTest {
             .role(UserRole.PLAYER)
             .active(true)
             .build();
+        testPlayer.setCreatedAt(now.minusDays(7));
+        testPlayer.setUpdatedAt(now);
         testPlayer = playerRepository.save(testPlayer);
     }
 
@@ -224,17 +227,23 @@ class GameSessionRepositoryTest {
 
     private GameSession createSession(Player player, GameType gameType,
                                      DifficultyLevel difficulty, SessionStatus status) {
-        return GameSession.builder()
+        LocalDateTime now = LocalDateTime.now();
+        GameSession session = GameSession.builder()
             .player(player)
             .gameType(gameType)
             .difficulty(difficulty)
             .status(status)
-            .startedAt(LocalDateTime.now())
+            .startedAt(now)
             .sessionData("{}")
             .build();
+        // Set audit timestamps manually for tests
+        session.setCreatedAt(now);
+        session.setUpdatedAt(now);
+        return session;
     }
 
     private Player createPlayer(String username, String email) {
+        LocalDateTime now = LocalDateTime.now();
         Player player = Player.builder()
             .username(username)
             .email(email)
@@ -242,6 +251,9 @@ class GameSessionRepositoryTest {
             .role(UserRole.PLAYER)
             .active(true)
             .build();
+        // Set audit timestamps manually for tests
+        player.setCreatedAt(now);
+        player.setUpdatedAt(now);
         return playerRepository.save(player);
     }
 }

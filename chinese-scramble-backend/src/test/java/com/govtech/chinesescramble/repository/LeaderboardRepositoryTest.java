@@ -50,7 +50,9 @@ class LeaderboardRepositoryTest {
         entityManager.flush();
         entityManager.clear();
 
-        // Create test players
+        // Create test players with explicit timestamps
+        LocalDateTime now = LocalDateTime.now();
+
         player1 = Player.builder()
             .username("玩家001")
             .email("player1@test.com")
@@ -58,6 +60,8 @@ class LeaderboardRepositoryTest {
             .role(UserRole.PLAYER)
             .active(true)
             .build();
+        player1.setCreatedAt(now.minusDays(7));
+        player1.setUpdatedAt(now);
 
         player2 = Player.builder()
             .username("张伟")
@@ -66,6 +70,8 @@ class LeaderboardRepositoryTest {
             .role(UserRole.PLAYER)
             .active(true)
             .build();
+        player2.setCreatedAt(now.minusDays(5));
+        player2.setUpdatedAt(now);
 
         player3 = Player.builder()
             .username("李娜")
@@ -74,12 +80,14 @@ class LeaderboardRepositoryTest {
             .role(UserRole.PLAYER)
             .active(true)
             .build();
+        player3.setCreatedAt(now.minusDays(3));
+        player3.setUpdatedAt(now);
 
         entityManager.persist(player1);
         entityManager.persist(player2);
         entityManager.persist(player3);
 
-        // Create leaderboard entries
+        // Create leaderboard entries with explicit timestamps
         Leaderboard entry1 = Leaderboard.builder()
             .player(player1)
             .gameType(GameType.IDIOM)
@@ -89,8 +97,10 @@ class LeaderboardRepositoryTest {
             .averageScore(300.0)
             .rank(1)
             .accuracyRate(0.95)
-            .lastUpdated(LocalDateTime.now())
+            .lastUpdated(now)
             .build();
+        entry1.setCreatedAt(now.minusDays(5));
+        entry1.setUpdatedAt(now);
 
         Leaderboard entry2 = Leaderboard.builder()
             .player(player2)
@@ -101,8 +111,10 @@ class LeaderboardRepositoryTest {
             .averageScore(300.0)
             .rank(2)
             .accuracyRate(0.92)
-            .lastUpdated(LocalDateTime.now())
+            .lastUpdated(now)
             .build();
+        entry2.setCreatedAt(now.minusDays(4));
+        entry2.setUpdatedAt(now);
 
         Leaderboard entry3 = Leaderboard.builder()
             .player(player3)
@@ -113,8 +125,10 @@ class LeaderboardRepositoryTest {
             .averageScore(333.3)
             .rank(3)
             .accuracyRate(0.90)
-            .lastUpdated(LocalDateTime.now())
+            .lastUpdated(now)
             .build();
+        entry3.setCreatedAt(now.minusDays(3));
+        entry3.setUpdatedAt(now);
 
         entityManager.persist(entry1);
         entityManager.persist(entry2);
