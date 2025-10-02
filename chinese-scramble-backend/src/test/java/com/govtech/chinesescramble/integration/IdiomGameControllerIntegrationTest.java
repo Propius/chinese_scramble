@@ -73,7 +73,7 @@ class IdiomGameControllerIntegrationTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.scrambledCharacters").isArray())
             .andExpect(jsonPath("$.difficulty").value("EASY"))
-            .andExpect(jsonPath("$.timeLimit").exists());
+            .andExpect(jsonPath("$.timeLimitSeconds").exists());
     }
 
     @Test
