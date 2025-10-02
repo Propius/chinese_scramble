@@ -10,6 +10,7 @@ import com.govtech.chinesescramble.repository.IdiomScoreRepository;
 import com.govtech.chinesescramble.repository.PlayerRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -59,6 +60,9 @@ public class IdiomGameService {
     private final GameSessionService gameSessionService;
     private final QuestionHistoryService questionHistoryService;
 
+    @Value("${app.features.no-repeat-questions:false}")
+    private boolean enableNoRepeatQuestions;
+
     private final Random random = new Random();
 
     /**
@@ -87,32 +91,41 @@ public class IdiomGameService {
             throw new IllegalStateException("No idioms found for difficulty: " + difficulty);
         }
 
-        // Get excluded questions (recently shown)
-        Set<String> excludedIdioms = questionHistoryService.getExcludedQuestions(playerId, "IDIOM");
+        // Determine available idioms based on feature flag
+        List<Map<String, Object>> availableIdioms;
 
-        // Filter out recently shown idioms
-        List<Map<String, Object>> availableIdioms = difficultyIdioms.stream()
-            .filter(idiom -> !excludedIdioms.contains((String) idiom.get("idiom")))
-            .collect(Collectors.toList());
+        if (enableNoRepeatQuestions) {
+            // NO-REPEAT ENABLED: Filter out previously shown questions
+            log.debug("No-repeat feature ENABLED - checking question history for player: {}", playerId);
 
-        // Check if all questions have been completed
-        boolean allQuestionsCompleted = availableIdioms.isEmpty();
-        if (allQuestionsCompleted) {
-            log.info("All idioms completed for player {}, difficulty={}, total={}",
-                playerId, difficulty, difficultyIdioms.size());
-            // Note: We do NOT clear history here - that should only happen on explicit restart
-            // For now, throw exception to signal completion to frontend
-            throw new AllQuestionsCompletedException(
-                String.format("恭喜！您已完成所有 %s 难度的成语题目！", difficulty.getLabel())
-            );
+            Set<String> excludedIdioms = questionHistoryService.getExcludedQuestions(playerId, "IDIOM");
+
+            availableIdioms = difficultyIdioms.stream()
+                .filter(idiom -> !excludedIdioms.contains((String) idiom.get("idiom")))
+                .collect(Collectors.toList());
+
+            // Check if all questions have been completed
+            if (availableIdioms.isEmpty()) {
+                log.info("All idioms completed for player {}, difficulty={}, total={}",
+                    playerId, difficulty, difficultyIdioms.size());
+                throw new AllQuestionsCompletedException(
+                    String.format("恭喜！您已完成所有 %s 难度的成语题目！", difficulty.getLabel())
+                );
+            }
+        } else {
+            // NO-REPEAT DISABLED: Use all questions (questions can repeat)
+            log.debug("No-repeat feature DISABLED - all questions available for player: {}", playerId);
+            availableIdioms = difficultyIdioms;
         }
 
         // Select random idiom from available pool
         Map<String, Object> selectedIdiom = availableIdioms.get(random.nextInt(availableIdioms.size()));
         String idiom = (String) selectedIdiom.get("idiom");
 
-        // Add to question history
-        questionHistoryService.addQuestion(playerId, "IDIOM", idiom);
+        // Only track question history if feature is enabled
+        if (enableNoRepeatQuestions) {
+            questionHistoryService.addQuestion(playerId, "IDIOM", idiom);
+        }
         String definition = (String) selectedIdiom.get("definition");
         String pinyin = (String) selectedIdiom.get("pinyin");
 

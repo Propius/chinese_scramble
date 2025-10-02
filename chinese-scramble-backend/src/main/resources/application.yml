@@ -154,6 +154,7 @@ app:
     hints: ${ENABLE_HINTS:true}
     practice-mode: ${ENABLE_PRACTICE_MODE:true}
     achievements: ${ENABLE_ACHIEVEMENTS:true}
+    no-repeat-questions: ${ENABLE_NO_REPEAT_QUESTIONS:true}
 
   # Game Configuration
   game:

@@ -10,6 +10,7 @@ import com.govtech.chinesescramble.repository.PlayerRepository;
 import com.govtech.chinesescramble.repository.SentenceScoreRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -59,6 +60,9 @@ public class SentenceGameService {
     private final GameSessionService gameSessionService;
     private final QuestionHistoryService questionHistoryService;
 
+    @Value("${app.features.no-repeat-questions:false}")
+    private boolean enableNoRepeatQuestions;
+
     private final Random random = new Random();
 
     /**
@@ -87,32 +91,41 @@ public class SentenceGameService {
             throw new IllegalStateException("No sentences found for difficulty: " + difficulty);
         }
 
-        // Get excluded questions (recently shown)
-        Set<String> excludedSentences = questionHistoryService.getExcludedQuestions(playerId, "SENTENCE");
+        // Determine available sentences based on feature flag
+        List<Map<String, Object>> availableSentences;
 
-        // Filter out recently shown sentences
-        List<Map<String, Object>> availableSentences = difficultySentences.stream()
-            .filter(sentence -> !excludedSentences.contains((String) sentence.get("targetSentence")))
-            .collect(Collectors.toList());
+        if (enableNoRepeatQuestions) {
+            // NO-REPEAT ENABLED: Filter out previously shown questions
+            log.debug("No-repeat feature ENABLED - checking question history for player: {}", playerId);
 
-        // Check if all questions have been completed
-        boolean allQuestionsCompleted = availableSentences.isEmpty();
-        if (allQuestionsCompleted) {
-            log.info("All sentences completed for player {}, difficulty={}, total={}",
-                playerId, difficulty, difficultySentences.size());
-            // Note: We do NOT clear history here - that should only happen on explicit restart
-            // For now, throw exception to signal completion to frontend
-            throw new AllQuestionsCompletedException(
-                String.format("恭喜！您已完成所有 %s 难度的造句题目！", difficulty.getLabel())
-            );
+            Set<String> excludedSentences = questionHistoryService.getExcludedQuestions(playerId, "SENTENCE");
+
+            availableSentences = difficultySentences.stream()
+                .filter(sentence -> !excludedSentences.contains((String) sentence.get("targetSentence")))
+                .collect(Collectors.toList());
+
+            // Check if all questions have been completed
+            if (availableSentences.isEmpty()) {
+                log.info("All sentences completed for player {}, difficulty={}, total={}",
+                    playerId, difficulty, difficultySentences.size());
+                throw new AllQuestionsCompletedException(
+                    String.format("恭喜！您已完成所有 %s 难度的造句题目！", difficulty.getLabel())
+                );
+            }
+        } else {
+            // NO-REPEAT DISABLED: Use all questions (questions can repeat)
+            log.debug("No-repeat feature DISABLED - all questions available for player: {}", playerId);
+            availableSentences = difficultySentences;
         }
 
         // Select random sentence from available pool
         Map<String, Object> selectedSentence = availableSentences.get(random.nextInt(availableSentences.size()));
         String targetSentence = (String) selectedSentence.get("targetSentence");
 
-        // Add to question history
-        questionHistoryService.addQuestion(playerId, "SENTENCE", targetSentence);
+        // Only track question history if feature is enabled
+        if (enableNoRepeatQuestions) {
+            questionHistoryService.addQuestion(playerId, "SENTENCE", targetSentence);
+        }
         String meaning = (String) selectedSentence.get("meaning");
         String pinyin = (String) selectedSentence.get("pinyin");
         List<String> words = (List<String>) selectedSentence.get("words");
