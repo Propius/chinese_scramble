@@ -1,0 +1,248 @@
+/* Mobile Responsiveness Styles */
+
+/* Mobile breakpoint: devices < 768px */
+@media (max-width: 767px) {
+  /* Global mobile adjustments */
+  body {
+    font-size: 14px;
+  }
+
+  h1 {
+    font-size: 1.75rem !important;
+  }
+
+  h2 {
+    font-size: 1.5rem !important;
+  }
+
+  h3 {
+    font-size: 1.25rem !important;
+  }
+
+  h4 {
+    font-size: 1.1rem !important;
+  }
+
+  /* Sidebar adjustments */
+  .sidebar-mobile {
+    width: 100% !important;
+  }
+
+  /* Content area adjustments */
+  .flex-grow-1 {
+    margin-left: 0 !important;
+  }
+
+  /* Game tiles - make them touch-friendly */
+  .character-tile,
+  .word-tile {
+    min-width: 60px !important;
+    min-height: 60px !important;
+    font-size: 1.5rem !important;
+    margin: 0.25rem !important;
+  }
+
+  /* Drop zones */
+  .drop-zone {
+    min-height: 70px !important;
+    padding: 0.5rem !important;
+  }
+
+  /* Buttons - make them larger for touch */
+  .btn {
+    min-height: 44px !important;
+    font-size: 1rem !important;
+    padding: 0.75rem 1.5rem !important;
+  }
+
+  .btn-sm {
+    min-height: 38px !important;
+    font-size: 0.875rem !important;
+    padding: 0.5rem 1rem !important;
+  }
+
+  /* Cards and containers */
+  .card,
+  .shadow-lg {
+    margin: 0.5rem !important;
+    padding: 1rem !important;
+    border-radius: 12px !important;
+  }
+
+  /* Game area padding */
+  main {
+    padding: 1rem 0.5rem !important;
+  }
+
+  /* Statistics cards */
+  .stats-card {
+    flex-direction: column !important;
+    text-align: center !important;
+  }
+
+  .stats-item {
+    margin-bottom: 1rem !important;
+  }
+
+  /* Leaderboard table */
+  table {
+    font-size: 0.875rem !important;
+  }
+
+  table th,
+  table td {
+    padding: 0.5rem !important;
+  }
+
+  /* Modal adjustments */
+  .modal-dialog {
+    margin: 0.5rem !important;
+    max-width: calc(100% - 1rem) !important;
+  }
+
+  .modal-content {
+    border-radius: 16px !important;
+  }
+
+  /* Username modal */
+  .username-modal {
+    padding: 1.5rem !important;
+  }
+
+  /* Game result modal */
+  .game-result-modal {
+    padding: 1.5rem !important;
+    font-size: 0.95rem !important;
+  }
+
+  /* Hint display */
+  .hint-box {
+    font-size: 0.875rem !important;
+    padding: 0.75rem !important;
+  }
+
+  /* Timer and score display */
+  .game-stats {
+    font-size: 0.875rem !important;
+    padding: 0.5rem !important;
+  }
+
+  /* Difficulty selector */
+  .difficulty-btn {
+    padding: 0.75rem !important;
+    font-size: 0.9rem !important;
+  }
+
+  /* Grid adjustments */
+  .col-6 {
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* Hide desktop-only elements */
+  .desktop-only {
+    display: none !important;
+  }
+
+  /* Show mobile-only elements */
+  .mobile-only {
+    display: block !important;
+  }
+
+  /* Navigation improvements */
+  .nav-link {
+    padding: 0.75rem 1rem !important;
+    font-size: 1rem !important;
+  }
+
+  /* Footer adjustments */
+  footer {
+    font-size: 0.75rem !important;
+    padding: 1rem 0.5rem !important;
+  }
+
+  /* Form controls */
+  .form-control,
+  .form-select {
+    font-size: 1rem !important;
+    padding: 0.75rem !important;
+    min-height: 44px !important;
+  }
+
+  /* Confetti adjustments */
+  canvas {
+    max-width: 100% !important;
+  }
+}
+
+/* Tablet breakpoint: 768px - 1024px */
+@media (min-width: 768px) and (max-width: 1024px) {
+  /* Game tiles */
+  .character-tile,
+  .word-tile {
+    min-width: 70px !important;
+    min-height: 70px !important;
+  }
+
+  /* Sidebar */
+  .sidebar {
+    width: 200px !important;
+  }
+
+  /* Content area */
+  .flex-grow-1 {
+    margin-left: 200px !important;
+  }
+}
+
+/* Touch-specific improvements */
+@media (hover: none) and (pointer: coarse) {
+  /* Increase all tap targets to at least 44x44px */
+  button,
+  a,
+  input[type="button"],
+  input[type="submit"] {
+    min-height: 44px !important;
+    min-width: 44px !important;
+  }
+
+  /* Remove hover effects on touch devices */
+  *:hover {
+    opacity: 1 !important;
+  }
+
+  /* Add active states for better touch feedback */
+  button:active,
+  a:active {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+}
+
+/* Landscape mobile adjustments */
+@media (max-width: 767px) and (orientation: landscape) {
+  /* Reduce vertical padding */
+  main {
+    padding: 0.5rem !important;
+  }
+
+  .card,
+  .shadow-lg {
+    padding: 0.75rem !important;
+  }
+
+  /* Make game area more compact */
+  .game-container {
+    max-height: 80vh !important;
+    overflow-y: auto !important;
+  }
+}
+
+/* High DPI displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  /* Ensure text remains crisp */
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}

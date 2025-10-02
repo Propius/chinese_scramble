@@ -167,4 +167,40 @@ public class IdiomGameController {
         var history = idiomGameService.getPlayerHistory(playerId, 10);
         return ResponseEntity.ok(history);
     }
+
+    /**
+     * Restarts quiz - clears question history for player
+     * This allows the player to replay all questions from the beginning
+     */
+    @PostMapping("/restart")
+    public ResponseEntity<?> restartQuiz(@RequestParam String playerId) {
+        try {
+            // Try to parse as Long first (player ID)
+            Long playerIdLong;
+            try {
+                playerIdLong = Long.parseLong(playerId);
+            } catch (NumberFormatException e) {
+                // It's a username, look up player
+                var player = playerService.getPlayerByUsername(playerId);
+                if (player.isEmpty()) {
+                    return ResponseEntity.badRequest().body(Map.of(
+                        "error", "Player not found: " + playerId
+                    ));
+                }
+                playerIdLong = player.get().getId();
+            }
+
+            // Clear question history for idiom game
+            idiomGameService.restartQuiz(playerIdLong);
+
+            log.info("Quiz restarted for player: {}", playerIdLong);
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "成语题目已重置，您可以重新开始挑战所有题目！"
+            ));
+        } catch (Exception e) {
+            log.error("Failed to restart quiz", e);
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
 }

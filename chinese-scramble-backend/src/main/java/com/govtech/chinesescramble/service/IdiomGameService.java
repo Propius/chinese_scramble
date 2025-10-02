@@ -5,6 +5,7 @@ import com.govtech.chinesescramble.entity.IdiomScore;
 import com.govtech.chinesescramble.entity.Player;
 import com.govtech.chinesescramble.entity.enums.DifficultyLevel;
 import com.govtech.chinesescramble.entity.enums.GameType;
+import com.govtech.chinesescramble.exception.AllQuestionsCompletedException;
 import com.govtech.chinesescramble.repository.IdiomScoreRepository;
 import com.govtech.chinesescramble.repository.PlayerRepository;
 import lombok.RequiredArgsConstructor;
@@ -94,11 +95,16 @@ public class IdiomGameService {
             .filter(idiom -> !excludedIdioms.contains((String) idiom.get("idiom")))
             .collect(Collectors.toList());
 
-        // If all idioms have been shown, clear history and use full list
-        if (availableIdioms.isEmpty()) {
-            log.info("All idioms exhausted for player {}, clearing history", playerId);
-            questionHistoryService.clearHistory(playerId, "IDIOM");
-            availableIdioms = difficultyIdioms;
+        // Check if all questions have been completed
+        boolean allQuestionsCompleted = availableIdioms.isEmpty();
+        if (allQuestionsCompleted) {
+            log.info("All idioms completed for player {}, difficulty={}, total={}",
+                playerId, difficulty, difficultyIdioms.size());
+            // Note: We do NOT clear history here - that should only happen on explicit restart
+            // For now, throw exception to signal completion to frontend
+            throw new AllQuestionsCompletedException(
+                String.format("恭喜！您已完成所有 %s 难度的成语题目！", difficulty.getLabel())
+            );
         }
 
         // Select random idiom from available pool
@@ -306,6 +312,17 @@ public class IdiomGameService {
     @Transactional(readOnly = true)
     public Optional<IdiomScore> getPersonalBest(Long playerId, DifficultyLevel difficulty) {
         return idiomScoreRepository.findPersonalBest(playerId, difficulty);
+    }
+
+    /**
+     * Restarts quiz by clearing question history
+     * This allows player to replay all questions from the beginning
+     *
+     * @param playerId player ID
+     */
+    public void restartQuiz(Long playerId) {
+        log.info("Restarting idiom quiz for player: {}", playerId);
+        questionHistoryService.clearHistory(playerId, "IDIOM");
     }
 
     // ========================================================================

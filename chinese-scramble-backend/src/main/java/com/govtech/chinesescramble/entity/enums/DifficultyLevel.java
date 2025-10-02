@@ -108,4 +108,18 @@ public enum DifficultyLevel {
             case EXPERT -> "Expert (Native - HSK 6)";
         };
     }
+
+    /**
+     * Gets the Chinese label for this difficulty level
+     *
+     * @return Chinese label
+     */
+    public String getLabel() {
+        return switch (this) {
+            case EASY -> "简单";
+            case MEDIUM -> "中等";
+            case HARD -> "困难";
+            case EXPERT -> "专家";
+        };
+    }
 }

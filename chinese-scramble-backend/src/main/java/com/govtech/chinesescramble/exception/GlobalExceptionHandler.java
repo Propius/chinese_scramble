@@ -173,6 +173,30 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Handle AllQuestionsCompletedException - Quiz completion
+     */
+    @ExceptionHandler(AllQuestionsCompletedException.class)
+    public ResponseEntity<ErrorResponse> handleAllQuestionsCompletedException(
+        AllQuestionsCompletedException ex,
+        HttpServletRequest request
+    ) {
+        log.info("All questions completed: {}", ex.getMessage());
+
+        ErrorResponse error = ErrorResponse.of(
+            HttpStatus.OK.value(),
+            "Quiz Completed",
+            ex.getMessage(),
+            request.getRequestURI(),
+            Map.of(
+                "allQuestionsCompleted", true,
+                "action", "restart_required"
+            )
+        );
+
+        return ResponseEntity.ok(error);
+    }
+
+    /**
      * Handle validation errors from @Valid annotation
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)

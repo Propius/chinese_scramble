@@ -5,6 +5,7 @@ import com.govtech.chinesescramble.entity.Player;
 import com.govtech.chinesescramble.entity.SentenceScore;
 import com.govtech.chinesescramble.entity.enums.DifficultyLevel;
 import com.govtech.chinesescramble.entity.enums.GameType;
+import com.govtech.chinesescramble.exception.AllQuestionsCompletedException;
 import com.govtech.chinesescramble.repository.PlayerRepository;
 import com.govtech.chinesescramble.repository.SentenceScoreRepository;
 import lombok.RequiredArgsConstructor;
@@ -94,11 +95,16 @@ public class SentenceGameService {
             .filter(sentence -> !excludedSentences.contains((String) sentence.get("targetSentence")))
             .collect(Collectors.toList());
 
-        // If all sentences have been shown, clear history and use full list
-        if (availableSentences.isEmpty()) {
-            log.info("All sentences exhausted for player {}, clearing history", playerId);
-            questionHistoryService.clearHistory(playerId, "SENTENCE");
-            availableSentences = difficultySentences;
+        // Check if all questions have been completed
+        boolean allQuestionsCompleted = availableSentences.isEmpty();
+        if (allQuestionsCompleted) {
+            log.info("All sentences completed for player {}, difficulty={}, total={}",
+                playerId, difficulty, difficultySentences.size());
+            // Note: We do NOT clear history here - that should only happen on explicit restart
+            // For now, throw exception to signal completion to frontend
+            throw new AllQuestionsCompletedException(
+                String.format("恭喜！您已完成所有 %s 难度的造句题目！", difficulty.getLabel())
+            );
         }
 
         // Select random sentence from available pool
@@ -328,6 +334,17 @@ public class SentenceGameService {
     @Transactional(readOnly = true)
     public Optional<SentenceScore> getPersonalBest(Long playerId, DifficultyLevel difficulty) {
         return sentenceScoreRepository.findPersonalBest(playerId, difficulty);
+    }
+
+    /**
+     * Restarts quiz by clearing question history
+     * This allows player to replay all questions from the beginning
+     *
+     * @param playerId player ID
+     */
+    public void restartQuiz(Long playerId) {
+        log.info("Restarting sentence quiz for player: {}", playerId);
+        questionHistoryService.clearHistory(playerId, "SENTENCE");
     }
 
     // ========================================================================

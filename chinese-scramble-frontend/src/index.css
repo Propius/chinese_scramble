@@ -1,0 +1,277 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700;900&display=swap');
+
+body {
+  margin: 0;
+  font-family: 'Fredoka', 'Noto Sans SC', 'SimSun', 'Microsoft YaHei', 'PingFang SC', 'Hiragino Sans GB', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 25%, #ddd6fe 50%, #e9d5ff 75%, #fae8ff 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* Base styling for the app */
+* {
+  box-sizing: border-box;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Enhanced Bounce animation for tiles - MORE INTERACTIVE */
+@keyframes bounceIn {
+  0% {
+    transform: scale(0.1) translateY(-150px) rotate(-180deg);
+    opacity: 0;
+  }
+  30% {
+    transform: scale(1.2) translateY(0) rotate(10deg);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(0.85) translateY(-20px) rotate(-5deg);
+  }
+  70% {
+    transform: scale(1.1) translateY(0) rotate(5deg);
+  }
+  85% {
+    transform: scale(0.95) translateY(-5px) rotate(-2deg);
+  }
+  100% {
+    transform: scale(1) translateY(0) rotate(0deg);
+  }
+}
+
+/* Ripple effect on drop */
+@keyframes ripple {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+/* Confetti animations */
+@keyframes confetti-fall-1 {
+  0% {
+    transform: translateY(-100vh) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+@keyframes confetti-fall-2 {
+  0% {
+    transform: translateY(-100vh) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(-720deg);
+    opacity: 0;
+  }
+}
+
+@keyframes confetti-fall-3 {
+  0% {
+    transform: translateY(-100vh) rotate(0deg) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(0) rotate(360deg) scale(1.5);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(720deg) scale(0.5);
+    opacity: 0;
+  }
+}
+
+/* ===== MOBILE RESPONSIVENESS ===== */
+
+/* Tablets and small desktops */
+@media (max-width: 1024px) {
+  body {
+    font-size: 14px;
+  }
+
+  .idiom-game, .sentence-game {
+    padding: 2rem 1rem !important;
+  }
+
+  .character-tile, .word-tile {
+    width: 90px !important;
+    height: 90px !important;
+    font-size: 1.5rem !important;
+  }
+}
+
+/* Mobile devices */
+@media (max-width: 768px) {
+  body {
+    font-size: 13px;
+    padding: 0.5rem;
+  }
+
+  /* Container adjustments */
+  .max-w-6xl {
+    max-width: 100% !important;
+    margin: 0 !important;
+  }
+
+  /* Game containers */
+  .idiom-game, .sentence-game {
+    padding: 1rem 0.5rem !important;
+    border-radius: 24px !important;
+  }
+
+  /* Character and word tiles - smaller for mobile */
+  .character-tile, .word-tile {
+    width: 70px !important;
+    height: 70px !important;
+    font-size: 1.25rem !important;
+    margin: 0.25rem !important;
+  }
+
+  /* Button groups */
+  .flex.justify-center.gap-3 {
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+    width: 100%;
+  }
+
+  .flex.justify-center.gap-3 button {
+    width: 100% !important;
+    font-size: 0.875rem !important;
+    padding: 0.5rem !important;
+  }
+
+  /* Stats bars */
+  .flex.justify-between {
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+    text-align: center;
+  }
+
+  /* Grid layouts - single column on mobile */
+  .grid.grid-cols-3 {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+
+  .grid.grid-cols-2 {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Text sizes */
+  .text-5xl {
+    font-size: 2rem !important;
+  }
+
+  .text-4xl {
+    font-size: 1.75rem !important;
+  }
+
+  .text-3xl {
+    font-size: 1.5rem !important;
+  }
+
+  .text-2xl {
+    font-size: 1.25rem !important;
+  }
+
+  .text-xl {
+    font-size: 1.125rem !important;
+  }
+
+  /* Padding adjustments */
+  .p-12 {
+    padding: 1.5rem !important;
+  }
+
+  .p-10 {
+    padding: 1.25rem !important;
+  }
+
+  .p-8 {
+    padding: 1rem !important;
+  }
+
+  .p-6 {
+    padding: 0.75rem !important;
+  }
+
+  .p-5 {
+    padding: 0.625rem !important;
+  }
+
+  /* Margin adjustments */
+  .mb-12 {
+    margin-bottom: 1.5rem !important;
+  }
+
+  .mb-8 {
+    margin-bottom: 1rem !important;
+  }
+
+  .mb-6 {
+    margin-bottom: 0.75rem !important;
+  }
+
+  /* Modal adjustments */
+  .modal-content {
+    margin: 0.5rem !important;
+  }
+}
+
+/* Small mobile devices */
+@media (max-width: 480px) {
+  body {
+    font-size: 12px;
+  }
+
+  /* Even smaller tiles for very small screens */
+  .character-tile, .word-tile {
+    width: 60px !important;
+    height: 60px !important;
+    font-size: 1.125rem !important;
+    margin: 0.2rem !important;
+  }
+
+  /* Compact headers */
+  .text-3xl {
+    font-size: 1.25rem !important;
+  }
+
+  .text-2xl {
+    font-size: 1.125rem !important;
+  }
+
+  /* Smaller buttons */
+  button {
+    font-size: 0.75rem !important;
+    padding: 0.375rem 0.75rem !important;
+  }
+
+  /* Reduce spacing */
+  .gap-8 {
+    gap: 1rem !important;
+  }
+
+  .gap-6 {
+    gap: 0.75rem !important;
+  }
+}

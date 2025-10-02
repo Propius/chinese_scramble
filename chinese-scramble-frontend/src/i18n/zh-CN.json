@@ -1,0 +1,133 @@
+{
+  "navigation": {
+    "home": "首页",
+    "idiomGame": "成语拼字",
+    "sentenceGame": "造句游戏",
+    "leaderboard": "排行榜",
+    "statistics": "统计数据",
+    "settings": "设置"
+  },
+  "common": {
+    "start": "开始游戏",
+    "submit": "提交答案",
+    "restart": "重新开始",
+    "next": "下一题",
+    "skip": "跳过",
+    "useHint": "使用提示",
+    "pause": "暂停",
+    "resume": "继续",
+    "back": "返回",
+    "confirm": "确认",
+    "cancel": "取消",
+    "save": "保存",
+    "close": "关闭",
+    "loading": "加载中...",
+    "error": "错误"
+  },
+  "difficulty": {
+    "easy": "简单",
+    "medium": "中等",
+    "hard": "困难",
+    "expert": "专家"
+  },
+  "game": {
+    "score": "得分",
+    "timeRemaining": "剩余时间",
+    "accuracy": "准确率",
+    "completed": "已完成",
+    "correct": "正确！",
+    "incorrect": "不正确，再试一次",
+    "timeout": "时间到！",
+    "congratulations": "恭喜过关！",
+    "scoreDisplay": "得分：{score} 分",
+    "timeDisplay": "剩余时间：{time} 秒",
+    "accuracyDisplay": "准确率：{accuracy}%"
+  },
+  "idiom": {
+    "title": "成语拼字游戏",
+    "description": "将打乱的汉字重新排列成正确的成语",
+    "characterPool": "可选字符",
+    "answerArea": "答案区域",
+    "meaning": "含义",
+    "usage": "用法示例",
+    "origin": "出处",
+    "pinyin": "拼音"
+  },
+  "sentence": {
+    "title": "造句游戏",
+    "description": "将打乱的词语重新排列成正确的句子",
+    "wordBank": "词汇库",
+    "buildArea": "造句区域",
+    "translation": "英文翻译",
+    "grammarPattern": "语法模式",
+    "grammarExplanation": "语法讲解",
+    "wordBreakdown": "词汇分解",
+    "clear": "清空"
+  },
+  "hints": {
+    "title": "提示系统",
+    "idiom": {
+      "level1": "显示成语含义",
+      "level2": "显示第一个字",
+      "level3": "显示用法示例"
+    },
+    "sentence": {
+      "level1": "显示句型提示",
+      "level2": "显示词序提示",
+      "level3": "显示结构提示"
+    },
+    "penalty": "扣{points}分",
+    "used": "已使用提示"
+  },
+  "leaderboard": {
+    "title": "排行榜",
+    "rank": "排名",
+    "player": "玩家",
+    "score": "得分",
+    "accuracy": "准确率",
+    "completed": "完成数量",
+    "filter": {
+      "gameType": "游戏类型",
+      "difficulty": "难度级别",
+      "combined": "综合排名"
+    }
+  },
+  "statistics": {
+    "title": "个人统计数据",
+    "overview": "统计总览",
+    "totalScore": "总得分",
+    "gamesPlayed": "游戏总数",
+    "averageAccuracy": "平均准确率",
+    "achievements": "成就解锁",
+    "idiomStats": "成语游戏统计",
+    "sentenceStats": "造句游戏统计",
+    "progressTracker": "进度追踪"
+  },
+  "settings": {
+    "title": "设置",
+    "audio": {
+      "title": "音频设置",
+      "volume": "音量",
+      "speed": "语速",
+      "showPinyin": "显示拼音",
+      "enabled": "启用音频"
+    },
+    "game": {
+      "title": "游戏偏好",
+      "practiceMode": "练习模式",
+      "hintsEnabled": "启用提示",
+      "timerEnabled": "启用计时器",
+      "defaultDifficulty": "默认难度"
+    },
+    "features": {
+      "title": "功能开关",
+      "adminOnly": "仅管理员可见"
+    }
+  },
+  "errors": {
+    "networkError": "网络错误，请稍后重试",
+    "loadingFailed": "加载失败",
+    "submissionFailed": "提交失败",
+    "validationFailed": "验证失败"
+  }
+}

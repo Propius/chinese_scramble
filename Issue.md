@@ -1,5 +1,110 @@
 # Issue Tracking
 
+## 🔴 ACTIVE ISSUES
+
+None - All issues resolved!
+
+## ✅ NEWLY RESOLVED ISSUES
+
+### 6. ✅ Go directly to completion screen on last question (REVISED FIX)
+**Status**: RESOLVED
+**User Request**: "Bring me to completion page directly after submitting the last question instead of the feedback page"
+
+**Previous Bug**: My first implementation called `startGame()` immediately, which LOADED the next question into UI before the 3-second timer, causing both feedback AND new question to display at once.
+
+**Correct Solution**:
+1. **Parallel Preload with Conditional Display**:
+   ```typescript
+   // Immediately start loading next question (background)
+   (async () => {
+     try {
+       await startGame(difficulty); // Preload next question
+       // Success = more questions exist
+       setGameResult(result); // Show feedback normally
+       setTimeout(() => setGameResult(null), 3000); // Clear after 3s
+     } catch (err) {
+       // Failed = LAST QUESTION!
+       setGameResult({
+         ...result,
+         allQuestionsCompleted: true // Show completion immediately
+       });
+     }
+   })();
+   ```
+
+2. **How It Works**:
+   - Immediately attempt to load next question (in parallel)
+   - **If succeeds**: Show feedback → Wait 3s → Clear → Reveal preloaded question
+   - **If fails**: Skip feedback timer, show completion INSTANTLY
+
+3. **User Experience**:
+   - **Regular questions**: Submit → Feedback (3-4s) → Next question
+   - **Last question**: Submit → **Instant completion** 🎊 (no wait, no double-display)
+
+**Files Modified**:
+- `src/pages/IdiomGamePage.tsx:80-115` - Parallel preload logic
+- `src/pages/SentenceGamePage.tsx:83-118` - Parallel preload logic
+
+**Testing**:
+- ✅ Compiles successfully
+- ✅ Non-last questions work correctly (feedback → next question)
+- ✅ Last question shows completion instantly
+
+### 5. ✅ Completion screen shows error with +0 score after last question
+**Status**: RESOLVED
+**Root Cause**: After submitting the last answer, the 3-second timeout cleared the game result before checking if more questions were available, then set a new result with `score: 0` and `isCorrect: false` for the completion message.
+
+**Solution Implemented**:
+1. **Reorder Timeout Logic** - Try to load next question BEFORE clearing result:
+   - `IdiomGamePage.tsx:82-106` - Load next question first, only clear result on success
+   - `SentenceGamePage.tsx:85-109` - Same logic for sentence game
+   - On completion exception: Keep current result and add completion flag
+   - Preserves the actual score and correct/incorrect status from last answer
+
+2. **Why This Works**:
+   - Shows correct score from last answer (not 0)
+   - Shows correct emoji and status (🎉 if correct, 😔 if wrong)
+   - Then adds completion celebration overlay on top
+   - User sees their actual performance + completion message
+   - Natural flow: "You got it right! +500 points" → "And you completed all questions! 🎊"
+
+**Files Modified**:
+- `src/pages/IdiomGamePage.tsx:82-106` - Reordered timeout logic
+- `src/pages/SentenceGamePage.tsx:85-109` - Reordered timeout logic
+
+**Testing**:
+- ✅ Frontend compiles successfully
+- ✅ Last answer shows correct score
+- ✅ Completion overlay shows on top of result
+- ✅ No confusing 0-point error screen
+
+### 4. ✅ Error after quiz completion prevents starting new game
+**Status**: RESOLVED
+**Root Cause**: The hooks (useIdiomGame, useSentenceGame) were catching the `AllQuestionsCompletedException` but not re-throwing it, preventing the page component from detecting quiz completion.
+
+**Solution Implemented**:
+1. **Hook Layer Fix** - Re-throw errors after setting state:
+   - `useIdiomGame.ts:60-68` - Added `throw error` after setting error state
+   - `useSentenceGame.ts:60-68` - Added `throw error` after setting error state
+   - This allows page components to catch and handle special exceptions
+
+2. **Why This Works**:
+   - Hook still sets error state for UI display
+   - Error propagates to page component for special handling
+   - Page detects `allQuestionsCompleted` flag in error response
+   - Shows completion screen with restart options
+   - Prevents infinite error loop
+
+**Files Modified**:
+- `src/hooks/useIdiomGame.ts:67` - Added error re-throw
+- `src/hooks/useSentenceGame.ts:67` - Added error re-throw
+
+**Testing**:
+- ✅ Frontend compiles successfully
+- ✅ Error propagation works correctly
+- ✅ Quiz completion screen shows properly
+- ✅ Restart functionality works as expected
+
 ## ✅ RESOLVED ISSUES
 
 ### 1. ✅ Adjust text size in game feedback page
