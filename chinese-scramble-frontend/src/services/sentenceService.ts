@@ -56,13 +56,13 @@ export const sentenceService = {
   },
 
   async validateAnswer(request: SentenceValidationRequest, playerId?: string): Promise<SentenceValidationResponse> {
-    const payload = playerId ? { ...request, playerId } : request;
-    return apiClient.post<SentenceValidationResponse>('/api/sentence-game/submit', payload);
+    const params = playerId ? `?playerId=${encodeURIComponent(playerId)}` : '';
+    return apiClient.post<SentenceValidationResponse>(`/api/sentence-game/submit${params}`, request);
   },
 
   async getHint(request: SentenceHintRequest, playerId?: string): Promise<SentenceHintResponse> {
-    const payload = playerId ? { ...request, playerId } : request;
-    return apiClient.post<SentenceHintResponse>('/api/sentence-game/hint', payload);
+    const params = playerId ? `?playerId=${encodeURIComponent(playerId)}` : '';
+    return apiClient.post<SentenceHintResponse>(`/api/sentence-game/hint${params}`, request);
   },
 
   async getTopics(): Promise<string[]> {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import Header from '../components/layout/Header';
 import { Difficulty, DIFFICULTY_LABELS } from '../constants/difficulties';
@@ -32,6 +32,12 @@ export const IdiomGamePage: React.FC = () => {
   const [gamesPlayed, setGamesPlayed] = useState(0);
   const [showConfetti, setShowConfetti] = useState(false);
   const [quizCompleted, setQuizCompleted] = useState(false);
+
+  // Reset completion state when component mounts
+  useEffect(() => {
+    setQuizCompleted(false);
+    setGameResult(null);
+  }, []);
 
   const handleStart = async () => {
     try {

@@ -56,13 +56,13 @@ export const idiomService = {
   },
 
   async validateAnswer(request: IdiomValidationRequest, playerId?: string): Promise<IdiomValidationResponse> {
-    const payload = playerId ? { ...request, playerId } : request;
-    return apiClient.post<IdiomValidationResponse>('/api/idiom-game/submit', payload);
+    const params = playerId ? `?playerId=${encodeURIComponent(playerId)}` : '';
+    return apiClient.post<IdiomValidationResponse>(`/api/idiom-game/submit${params}`, request);
   },
 
   async getHint(request: IdiomHintRequest, playerId?: string): Promise<IdiomHintResponse> {
-    const payload = playerId ? { ...request, playerId } : request;
-    return apiClient.post<IdiomHintResponse>('/api/idiom-game/hint', payload);
+    const params = playerId ? `?playerId=${encodeURIComponent(playerId)}` : '';
+    return apiClient.post<IdiomHintResponse>(`/api/idiom-game/hint${params}`, request);
   },
 
   async getCategories(): Promise<string[]> {
