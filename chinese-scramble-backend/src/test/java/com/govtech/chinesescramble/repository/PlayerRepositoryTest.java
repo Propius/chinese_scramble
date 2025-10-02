@@ -184,10 +184,11 @@ class PlayerRepositoryTest {
         List<Player> recentPlayers = playerRepository.findRecentlyActivePlayers(cutoffDate);
 
         // Then
-        assertThat(recentPlayers).hasSize(2);
+        // Only testPlayer2 (2 hours ago) is within 3 hours, testPlayer1 (1 day ago) is not
+        assertThat(recentPlayers).hasSize(1);
         assertThat(recentPlayers)
             .extracting(Player::getUsername)
-            .containsExactlyInAnyOrder("玩家001", "张伟");
+            .containsExactly("张伟");
     }
 
     @Test
@@ -219,27 +220,29 @@ class PlayerRepositoryTest {
     @DisplayName("Should find players registered after date")
     void testFindByCreatedAtAfter() {
         // Given
-        LocalDateTime cutoffDate = LocalDateTime.now().minusMinutes(1);
+        // testPlayer1: 7 days ago, testPlayer2: 5 days ago, testPlayer3: 30 days ago
+        LocalDateTime cutoffDate = LocalDateTime.now().minusDays(10);
 
         // When
         List<Player> newPlayers = playerRepository.findByCreatedAtAfter(cutoffDate);
 
         // Then
-        assertThat(newPlayers).hasSize(3); // All just created in setup
+        assertThat(newPlayers).hasSize(2); // testPlayer1 and testPlayer2
     }
 
     @Test
     @DisplayName("Should count players registered in date range")
     void testCountByCreatedAtBetween() {
         // Given
-        LocalDateTime start = LocalDateTime.now().minusHours(1);
-        LocalDateTime end = LocalDateTime.now().plusHours(1);
+        // testPlayer1: 7 days ago, testPlayer2: 5 days ago, testPlayer3: 30 days ago
+        LocalDateTime start = LocalDateTime.now().minusDays(10);
+        LocalDateTime end = LocalDateTime.now().minusDays(4);
 
         // When
         long count = playerRepository.countByCreatedAtBetween(start, end);
 
         // Then
-        assertThat(count).isEqualTo(3);
+        assertThat(count).isEqualTo(2); // testPlayer1 (7 days) and testPlayer2 (5 days)
     }
 
     @Test
@@ -252,7 +255,9 @@ class PlayerRepositoryTest {
         List<Player> inactivePlayers = playerRepository.findInactivePlayers(inactiveSince);
 
         // Then
-        assertThat(inactivePlayers).hasSize(2); // testPlayer1 (1 day ago) and testPlayer3 (null)
+        // Only testPlayer1 (1 day ago, active=true)
+        // testPlayer3 has active=false, so excluded by query
+        assertThat(inactivePlayers).hasSize(1);
     }
 
     @Test
