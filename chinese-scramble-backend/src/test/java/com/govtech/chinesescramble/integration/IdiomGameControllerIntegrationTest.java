@@ -47,6 +47,7 @@ class IdiomGameControllerIntegrationTest {
     void setUp() {
         playerRepository.deleteAll();
 
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
         testPlayer = Player.builder()
             .username("idiomgamer")
             .email("idiom@test.com")
@@ -54,6 +55,8 @@ class IdiomGameControllerIntegrationTest {
             .role(UserRole.PLAYER)
             .active(true)
             .build();
+        testPlayer.setCreatedAt(now);
+        testPlayer.setUpdatedAt(now);
         testPlayer = playerRepository.save(testPlayer);
     }
 
