@@ -41,11 +41,14 @@ export const useSentenceGame = () => {
         // Limit to last N questions to prevent long URLs and performance issues
         // Takes most recent questions (end of array) to maximize no-repeat effectiveness
         excludedIds = allExcluded.slice(-MAX_EXCLUDED_QUESTIONS);
+      } else {
+        // Clear localStorage when feature is OFF to prevent stale data issues
+        questionTracker.resetSeenQuestions('SENTENCE', difficulty);
       }
 
       const question = await sentenceService.startGame(difficulty, playerId, excludedIds);
 
-      if (DEFAULT_FEATURE_FLAGS.ENABLE_NO_REPEAT_QUESTIONS && question) {
+      if (DEFAULT_FEATURE_FLAGS.ENABLE_NO_REPEAT_QUESTIONS && question && question.id) {
         questionTracker.markQuestionAsSeen('SENTENCE', difficulty, question.id);
       }
 

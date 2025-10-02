@@ -37,15 +37,14 @@ export const useIdiomGame = () => {
       if (DEFAULT_FEATURE_FLAGS.ENABLE_NO_REPEAT_QUESTIONS) {
         const seenQuestions = questionTracker.getSeenQuestions('IDIOM', difficulty);
         const allExcluded = Array.from(seenQuestions);
-
-        // Limit to last N questions to prevent long URLs and performance issues
-        // Takes most recent questions (end of array) to maximize no-repeat effectiveness
         excludedIds = allExcluded.slice(-MAX_EXCLUDED_QUESTIONS);
+      } else {
+        questionTracker.resetSeenQuestions('IDIOM', difficulty);
       }
 
       const question = await idiomService.startGame(difficulty, playerId, excludedIds);
 
-      if (DEFAULT_FEATURE_FLAGS.ENABLE_NO_REPEAT_QUESTIONS && question) {
+      if (DEFAULT_FEATURE_FLAGS.ENABLE_NO_REPEAT_QUESTIONS && question && question.id) {
         questionTracker.markQuestionAsSeen('IDIOM', difficulty, question.id);
       }
 

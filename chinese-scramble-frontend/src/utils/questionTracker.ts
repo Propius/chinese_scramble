@@ -56,6 +56,11 @@ export const markQuestionAsSeen = (
   difficulty: string,
   questionId: number | string
 ): boolean => {
+  // Validate questionId - do not store undefined/null/empty
+  if (questionId === undefined || questionId === null || questionId === '') {
+    return false;
+  }
+
   const key = getStorageKey(gameType, difficulty);
   const seenQuestions = safelyReadFromStorage(key);
   seenQuestions.add(String(questionId));
@@ -83,7 +88,17 @@ export const getSeenQuestions = (
   difficulty: string
 ): Set<string> => {
   const key = getStorageKey(gameType, difficulty);
-  return safelyReadFromStorage(key);
+  const seenQuestions = safelyReadFromStorage(key);
+
+  // Filter out any invalid IDs (undefined, null, empty string, "undefined" string)
+  const validQuestions = new Set<string>();
+  seenQuestions.forEach(id => {
+    if (id && id !== 'undefined' && id !== 'null' && id.trim() !== '') {
+      validQuestions.add(id);
+    }
+  });
+
+  return validQuestions;
 };
 
 /**

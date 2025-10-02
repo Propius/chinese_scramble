@@ -10,7 +10,8 @@ export const DEFAULT_FEATURE_FLAGS: FeatureFlags = {
   ENABLE_HINTS: true,
   ENABLE_PRACTICE_MODE: true,
   ENABLE_ACHIEVEMENTS: true,
-  ENABLE_NO_REPEAT_QUESTIONS: true,
+  ENABLE_NO_REPEAT_QUESTIONS: false
+  ,
 };
 
 export const DIFFICULTY_SETTINGS: Record<string, DifficultySettings> = {

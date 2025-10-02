@@ -9,6 +9,7 @@ import Confetti from '../components/common/Confetti';
 import { usernameUtils } from '../utils/usernameUtils';
 import { soundManager } from '../utils/soundManager';
 import { DEFAULT_FEATURE_FLAGS } from '../constants/game.constants';
+import questionTracker from '../utils/questionTracker';
 
 interface GameResult {
   isCorrect: boolean;  // Backend returns isCorrect for idioms
@@ -24,7 +25,8 @@ export const IdiomGamePage: React.FC = () => {
   const { t } = useTranslation();
   const [difficulty, setDifficulty] = useState<Difficulty>(Difficulty.EASY);
   const [gameStarted, setGameStarted] = useState(false);
-  const { question, loading, error, startGame } = useIdiomGame();
+  const { question, loading, error: hookError, startGame } = useIdiomGame();
+  const [error, setError] = useState<string | null>(null);
   const [gameResult, setGameResult] = useState<GameResult | null>(null);
   const [hint, setHint] = useState<string>('');
   const [hintLoading, setHintLoading] = useState(false);
@@ -33,11 +35,22 @@ export const IdiomGamePage: React.FC = () => {
   const [showConfetti, setShowConfetti] = useState(false);
   const [quizCompleted, setQuizCompleted] = useState(false);
 
-  // Reset completion state when component mounts
+  // Reset completion state and clear stale localStorage when component mounts
   useEffect(() => {
     setQuizCompleted(false);
     setGameResult(null);
+
+    // Clear localStorage for all difficulties on page load
+    // This prevents stale data from previous sessions causing "all completed" errors
+    questionTracker.resetSeenQuestions('IDIOM');
   }, []);
+
+  // Sync hook error to local error state, but allow us to clear it independently
+  useEffect(() => {
+    if (hookError && !quizCompleted) {
+      setError(hookError);
+    }
+  }, [hookError, quizCompleted]);
 
   const handleStart = async () => {
     try {
@@ -50,13 +63,37 @@ export const IdiomGamePage: React.FC = () => {
       // Check if quiz is completed
       const errorData = err.response?.data;
       if (errorData?.details?.allQuestionsCompleted || errorData?.error?.includes('已完成所有')) {
-        setQuizCompleted(true);
-        setGameResult({
-          isCorrect: false,
-          score: 0,
-          feedback: errorData?.message || errorData?.error || '恭喜！您已完成所有题目！',
-          allQuestionsCompleted: true,
-        });
+        console.log('[IdiomGamePage] All questions completed, attempting restart...');
+
+        // Try to restart and start fresh
+        try {
+          if (DEFAULT_FEATURE_FLAGS.ENABLE_NO_REPEAT_QUESTIONS) {
+            const username = usernameUtils.getUsername() || 'Guest';
+            console.log('[IdiomGamePage] Calling backend restart from handleStart for user:', username);
+            await apiClient.post(`/api/idiom-game/restart?playerId=${encodeURIComponent(username)}`);
+          }
+
+          // Clear frontend state
+          questionTracker.resetSeenQuestions('IDIOM');
+
+          // Try starting again
+          console.log('[IdiomGamePage] Retrying startGame after restart...');
+          await startGame(difficulty);
+          setGameStarted(true);
+          setGameResult(null);
+          setHint('');
+          setQuizCompleted(false);
+        } catch (retryErr: any) {
+          console.error('[IdiomGamePage] Restart failed:', retryErr);
+          // If restart also fails, show completion message
+          setQuizCompleted(true);
+          setGameResult({
+            isCorrect: false,
+            score: 0,
+            feedback: `无法重新开始: ${retryErr.response?.data?.error || retryErr.message || '请手动刷新页面'}`,
+            allQuestionsCompleted: true,
+          });
+        }
       }
     }
   };
@@ -86,8 +123,7 @@ export const IdiomGamePage: React.FC = () => {
 
       // Check if no-repeat feature is enabled
       if (DEFAULT_FEATURE_FLAGS.ENABLE_NO_REPEAT_QUESTIONS) {
-        // NO-REPEAT ENABLED: Check for completion
-        // IMMEDIATELY check if there are more questions (to decide flow)
+        // NO-REPEAT ENABLED: Try to preload next question IMMEDIATELY to check for completion
         (async () => {
           try {
             // Attempt to preload next question (in background)
@@ -105,7 +141,9 @@ export const IdiomGamePage: React.FC = () => {
             // Failed to load next question - check if it's completion
             const errorData = startErr.response?.data;
             if (errorData?.details?.allQuestionsCompleted || errorData?.error?.includes('已完成所有')) {
-              // IT'S THE LAST QUESTION! Skip normal feedback, go straight to completion
+              // IT'S THE LAST QUESTION! Skip feedback, go STRAIGHT to completion
+              // CRITICAL: Clear error state from hook to prevent error banner
+              setError(null);
               setQuizCompleted(true);
               setGameResult({
                 ...result,
@@ -123,12 +161,43 @@ export const IdiomGamePage: React.FC = () => {
           }
         })();
       } else {
-        // NO-REPEAT DISABLED: Simple flow - always load next question after 3 seconds
+        // NO-REPEAT DISABLED: Show result briefly, then try to load next question
         setGameResult(result);
         setTimeout(async () => {
-          setGameResult(null);
-          setHint('');
-          await startGame(difficulty);
+          try {
+            // Try to load next question (backend should allow repeats when flag is OFF)
+            await startGame(difficulty);
+            setGameResult(null);
+            setHint('');
+          } catch (loadErr: any) {
+            const errorData = loadErr.response?.data;
+            console.error('[IdiomGamePage] Failed to load next question:', loadErr);
+
+            // Check if backend says all questions completed (backend bug - shouldn't track when flag is OFF)
+            if (errorData?.details?.allQuestionsCompleted || errorData?.error?.includes('已完成所有') || errorData?.error?.includes('已经完成所有')) {
+              console.log('[IdiomGamePage] Backend tracking completion even with flag OFF - calling restart to reset');
+              try {
+                // Call restart endpoint to reset backend state
+                const username = usernameUtils.getUsername() || 'Guest';
+                await apiClient.post(`/api/idiom-game/restart?playerId=${encodeURIComponent(username)}`);
+
+                // Try loading again after restart
+                await startGame(difficulty);
+                setGameResult(null);
+                setHint('');
+              } catch (retryErr: any) {
+                console.error('[IdiomGamePage] Restart also failed:', retryErr);
+                setGameResult(null);
+                setHint('');
+                setError('无法继续游戏，请返回菜单重新开始');
+              }
+            } else {
+              // Other error - just show error message
+              setGameResult(null);
+              setHint('');
+              setError('加载失败，请返回菜单重新开始');
+            }
+          }
         }, 3000);
       }
     } catch (err: any) {
@@ -144,6 +213,12 @@ export const IdiomGamePage: React.FC = () => {
   };
 
   const handleTimeout = () => {
+    // Don't handle timeout if quiz is already completed
+    if (quizCompleted) {
+      return;
+    }
+
+    soundManager.playLose();
     setGameResult({
       isCorrect: false,
       score: 0,
@@ -186,26 +261,38 @@ export const IdiomGamePage: React.FC = () => {
 
   const handleRestartQuiz = async () => {
     try {
+      console.log('[IdiomGamePage] Restart button clicked');
+
       // Only call backend restart if no-repeat feature is enabled
       if (DEFAULT_FEATURE_FLAGS.ENABLE_NO_REPEAT_QUESTIONS) {
         const username = usernameUtils.getUsername() || 'Guest';
-        await apiClient.post(`/api/idiom-game/restart?playerId=${encodeURIComponent(username)}`);
+        console.log('[IdiomGamePage] Calling backend restart for user:', username);
+        const response = await apiClient.post(`/api/idiom-game/restart?playerId=${encodeURIComponent(username)}`);
+        console.log('[IdiomGamePage] Restart response:', response);
       }
 
-      // Reset state
+      // Reset state AND clear localStorage
+      console.log('[IdiomGamePage] Resetting state and localStorage');
       setQuizCompleted(false);
       setGameResult(null);
       setTotalScore(0);
       setGamesPlayed(0);
+      setError(null);
+
+      // CRITICAL: Clear frontend localStorage too
+      questionTracker.resetSeenQuestions('IDIOM');
 
       // Start new game
+      console.log('[IdiomGamePage] Starting new game after restart');
       await handleStart();
     } catch (err: any) {
-      console.error('Restart error:', err);
+      console.error('[IdiomGamePage] Restart error:', err);
+      console.error('[IdiomGamePage] Error details:', err.response?.data);
+      setError(null); // Clear any previous errors
       setGameResult({
         isCorrect: false,
         score: 0,
-        feedback: '重新开始失败，请重试',
+        feedback: `重新开始失败: ${err.response?.data?.error || err.message || '请重试'}`,
       });
     }
   };
@@ -406,7 +493,7 @@ export const IdiomGamePage: React.FC = () => {
                           </button>
                           <button
                             onClick={handleBackToMenu}
-                            className="btn btn-secondary btn-lg px-6 py-3 fw-bold"
+                            className="btn btn-primary btn-lg px-6 py-3 fw-bold"
                             style={{ fontSize: '1.2rem' }}
                           >
                             📋 返回主菜单
@@ -433,7 +520,11 @@ export const IdiomGamePage: React.FC = () => {
                 }}>
                   <button
                     onClick={handleBackToMenu}
-                    className="btn btn-primary px-3 py-2 shadow"
+                    className="btn btn-primary px-4 py-2 shadow fw-bold"
+                    style={{
+                      fontSize: '1rem',
+                      borderRadius: '8px'
+                    }}
                   >
                     ← 返回菜单
                   </button>

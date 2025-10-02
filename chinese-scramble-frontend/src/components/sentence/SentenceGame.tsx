@@ -274,21 +274,23 @@ export const SentenceGame: React.FC<SentenceGameProps> = ({
                       onClick={() => handleTileClick(index)}
                       title="点击选择，再点击另一个词语交换位置"
                     >
-                      {/* Remove button - AT THE TOP RIGHT CORNER */}
+                      {/* Remove button - Badge style like difficulty checkmark */}
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           handleRemove(index);
                         }}
-                        className="text-white rounded-full w-6 h-6 flex items-center justify-center font-bold hover:scale-110 transition-all duration-200"
+                        className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-flex align-items-center justify-center"
                         style={{
-                          position: 'absolute',
-                          top: '4px',
-                          right: '4px',
                           zIndex: 30,
-                          background: 'linear-gradient(145deg, #ef4444, #dc2626)',
-                          boxShadow: '0 2px 6px rgba(239, 68, 68, 0.5)',
+                          width: '24px',
+                          height: '24px',
+                          padding: '0',
                           fontSize: '0.875rem',
+                          fontWeight: 'bold',
+                          cursor: 'pointer',
+                          border: 'none',
+                          boxShadow: '0 2px 6px rgba(239, 68, 68, 0.5)',
                         }}
                         title="点击移除"
                       >

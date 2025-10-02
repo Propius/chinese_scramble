@@ -1,5 +1,6 @@
 import apiClient from './api';
 import { Difficulty } from '../constants/difficulties';
+import { DEFAULT_FEATURE_FLAGS } from '../constants/game.constants';
 
 export interface SentenceQuestion {
   id: string;
@@ -49,9 +50,19 @@ export const sentenceService = {
     if (playerId) {
       params.append('playerId', playerId);
     }
-    if (excludedIds && excludedIds.length > 0) {
-      params.append('excludedIds', excludedIds.join(','));
+
+    // CRITICAL: Only send excludedIds if ALL conditions are met
+    const shouldSendExcludedIds =
+      DEFAULT_FEATURE_FLAGS.ENABLE_NO_REPEAT_QUESTIONS &&
+      excludedIds !== undefined &&
+      excludedIds !== null &&
+      Array.isArray(excludedIds) &&
+      excludedIds.length > 0;
+
+    if (shouldSendExcludedIds) {
+      params.append('excludedIds', excludedIds!.join(','));
     }
+
     return apiClient.get<SentenceQuestion>(`/api/sentence-game/start?${params.toString()}`);
   },
 
