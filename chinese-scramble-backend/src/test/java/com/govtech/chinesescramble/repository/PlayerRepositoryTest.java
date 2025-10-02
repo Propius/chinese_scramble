@@ -320,9 +320,9 @@ class PlayerRepositoryTest {
         duplicateUsername.setCreatedAt(now);
         duplicateUsername.setUpdatedAt(now);
 
-        // When/Then - Should throw exception on flush
-        entityManager.persist(duplicateUsername);
+        // When/Then - Unique constraint violation during flush
         org.junit.jupiter.api.Assertions.assertThrows(Exception.class, () -> {
+            entityManager.persist(duplicateUsername);
             entityManager.flush();
         });
     }

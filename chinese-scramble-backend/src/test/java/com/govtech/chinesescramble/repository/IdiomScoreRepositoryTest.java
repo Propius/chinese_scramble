@@ -359,9 +359,11 @@ class IdiomScoreRepositoryTest {
     void testCascadeDelete() {
         // Given
         Long scoreId = score1.getId();
+        Long playerId = testPlayer.getId();
 
-        // When
-        playerRepository.delete(testPlayer);
+        // When - Fetch player from repository to ensure managed entity with proper cascade
+        Player playerToDelete = playerRepository.findById(playerId).orElseThrow();
+        playerRepository.delete(playerToDelete);
         entityManager.flush();
         entityManager.clear();
 

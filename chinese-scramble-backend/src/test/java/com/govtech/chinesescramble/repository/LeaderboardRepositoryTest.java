@@ -283,9 +283,9 @@ class LeaderboardRepositoryTest {
         duplicate.setCreatedAt(now);
         duplicate.setUpdatedAt(now);
 
-        // When/Then - Testing unique constraint violation
-        entityManager.persist(duplicate);
+        // When/Then - Unique constraint violation during flush
         org.junit.jupiter.api.Assertions.assertThrows(Exception.class, () -> {
+            entityManager.persist(duplicate);
             entityManager.flush();
         });
     }
@@ -403,9 +403,11 @@ class LeaderboardRepositoryTest {
                 DifficultyLevel.EASY
             ).orElseThrow();
         Long entryId = entry.getId();
+        Long playerId = player1.getId();
 
-        // When
-        playerRepository.delete(player1);
+        // When - Fetch player from repository to ensure managed entity with proper cascade
+        Player playerToDelete = playerRepository.findById(playerId).orElseThrow();
+        playerRepository.delete(playerToDelete);
         entityManager.flush();
         entityManager.clear();
 
