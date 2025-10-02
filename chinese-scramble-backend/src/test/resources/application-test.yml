@@ -1,0 +1,59 @@
+# ============================================================================
+# Test Configuration for Chinese Word Scramble Game
+# ============================================================================
+# Profile: test
+# Purpose: Integration tests, repository tests, service tests
+# Database: H2 in-memory
+# ============================================================================
+
+spring:
+  # ============================================================================
+  # Database Configuration - H2 In-Memory
+  # ============================================================================
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driverClassName: org.h2.Driver
+    username: sa
+    password:
+
+  # ============================================================================
+  # JPA/Hibernate Configuration
+  # ============================================================================
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop  # Recreate schema for each test
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+
+  # ============================================================================
+  # Flyway Configuration - Disabled for Tests
+  # ============================================================================
+  flyway:
+    enabled: false  # Use Hibernate auto DDL for tests
+
+  # ============================================================================
+  # H2 Console - Disabled
+  # ============================================================================
+  h2:
+    console:
+      enabled: false
+
+# ============================================================================
+# Logging Configuration
+# ============================================================================
+logging:
+  level:
+    root: INFO
+    com.govtech.chinesescramble: DEBUG
+    org.springframework.orm.jpa: DEBUG
+    org.springframework.transaction: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE

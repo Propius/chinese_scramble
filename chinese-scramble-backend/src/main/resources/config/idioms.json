@@ -1,0 +1,224 @@
+{
+  "idioms": [
+    {
+      "idiom": "一马当先",
+      "pinyin": "yī mǎ dāng xiān",
+      "definition": "比喻走在前面，带头",
+      "meaning": "To take the lead; to be in the forefront",
+      "difficulty": "EASY",
+      "category": "leadership",
+      "usage": "在这次比赛中，他一马当先，最先冲过终点线。",
+      "length": 4
+    },
+    {
+      "idiom": "井底之蛙",
+      "pinyin": "jǐng dǐ zhī wā",
+      "definition": "比喻见识短浅的人",
+      "meaning": "A frog in a well; a person with a limited outlook",
+      "difficulty": "MEDIUM",
+      "category": "wisdom",
+      "usage": "不要做井底之蛙，要多出去看看世界。",
+      "length": 4
+    },
+    {
+      "idiom": "画蛇添足",
+      "pinyin": "huà shé tiān zú",
+      "definition": "比喻做多余的事，反而不恰当",
+      "meaning": "To draw legs on a snake; to ruin something by overdoing it",
+      "difficulty": "MEDIUM",
+      "category": "wisdom",
+      "usage": "这个设计已经很完美了，再添加装饰就是画蛇添足。",
+      "length": 4
+    },
+    {
+      "idiom": "刻舟求剑",
+      "pinyin": "kè zhōu qiú jiàn",
+      "definition": "比喻办事刻板，拘泥固执，不知变通",
+      "meaning": "Making a mark on a boat to locate a dropped sword; being inflexible",
+      "difficulty": "HARD",
+      "category": "wisdom",
+      "usage": "时代在进步，不能刻舟求剑，要与时俱进。",
+      "length": 4
+    },
+    {
+      "idiom": "守株待兔",
+      "pinyin": "shǒu zhū dài tù",
+      "definition": "比喻不主动努力，而希望得到意外的成功",
+      "meaning": "Waiting by a stump for a rabbit; relying on luck",
+      "difficulty": "EASY",
+      "category": "wisdom",
+      "usage": "成功需要努力，不能守株待兔。",
+      "length": 4
+    },
+    {
+      "idiom": "亡羊补牢",
+      "pinyin": "wáng yáng bǔ láo",
+      "definition": "比喻出了问题以后想办法补救，可以防止继续受损失",
+      "meaning": "Mend the fence after the sheep are lost; better late than never",
+      "difficulty": "MEDIUM",
+      "category": "wisdom",
+      "usage": "虽然犯了错误，但现在亡羊补牢，为时不晚。",
+      "length": 4
+    },
+    {
+      "idiom": "南辕北辙",
+      "pinyin": "nán yuán běi zhé",
+      "definition": "比喻行动和目的相反",
+      "meaning": "Going south by driving north; acting contrary to one's purpose",
+      "difficulty": "HARD",
+      "category": "wisdom",
+      "usage": "你的做法和目标南辕北辙，应该重新考虑。",
+      "length": 4
+    },
+    {
+      "idiom": "滥竽充数",
+      "pinyin": "làn yú chōng shù",
+      "definition": "比喻没有真才实学的人混在行家里充数，或拿不好的东西混在好的里面充数",
+      "meaning": "Passing oneself off as a musician in an ensemble; posing as an expert",
+      "difficulty": "EXPERT",
+      "category": "wisdom",
+      "usage": "在专业团队里，滥竽充数的人很快就会被发现。",
+      "length": 4
+    },
+    {
+      "idiom": "掩耳盗铃",
+      "pinyin": "yǎn ěr dào líng",
+      "definition": "比喻自己欺骗自己",
+      "meaning": "Covering one's ears while stealing a bell; self-deception",
+      "difficulty": "EASY",
+      "category": "wisdom",
+      "usage": "逃避问题就是掩耳盗铃，要勇于面对现实。",
+      "length": 4
+    },
+    {
+      "idiom": "拔苗助长",
+      "pinyin": "bá miáo zhù zhǎng",
+      "definition": "比喻违反事物发展的客观规律，急于求成，反而把事情弄糟",
+      "meaning": "Pulling up seedlings to help them grow; counterproductive haste",
+      "difficulty": "MEDIUM",
+      "category": "wisdom",
+      "usage": "教育孩子要循序渐进，不能拔苗助长。",
+      "length": 4
+    },
+    {
+      "idiom": "东施效颦",
+      "pinyin": "dōng shī xiào pín",
+      "definition": "比喻盲目模仿别人，结果适得其反",
+      "meaning": "Imitating others without understanding; blind imitation",
+      "difficulty": "HARD",
+      "category": "wisdom",
+      "usage": "学习别人要取长补短，不能东施效颦。",
+      "length": 4
+    },
+    {
+      "idiom": "杯弓蛇影",
+      "pinyin": "bēi gōng shé yǐng",
+      "definition": "比喻因疑神疑鬼而引起恐惧",
+      "meaning": "Mistaking the reflection of a bow for a snake; unnecessary fear",
+      "difficulty": "MEDIUM",
+      "category": "wisdom",
+      "usage": "不要杯弓蛇影，事情没有你想的那么复杂。",
+      "length": 4
+    },
+    {
+      "idiom": "叶公好龙",
+      "pinyin": "yè gōng hào lóng",
+      "definition": "比喻表面上爱好某事物，实际上并不真正爱好",
+      "meaning": "Lord Ye's love of dragons; superficial interest",
+      "difficulty": "HARD",
+      "category": "wisdom",
+      "usage": "他对艺术的兴趣只是叶公好龙，并不真心喜欢。",
+      "length": 4
+    },
+    {
+      "idiom": "自相矛盾",
+      "pinyin": "zì xiāng máo dùn",
+      "definition": "比喻自己说的话或做的事前后抵触，不一致",
+      "meaning": "Self-contradictory; inconsistent",
+      "difficulty": "MEDIUM",
+      "category": "logic",
+      "usage": "你的解释自相矛盾，让人无法相信。",
+      "length": 4
+    },
+    {
+      "idiom": "对牛弹琴",
+      "pinyin": "duì niú tán qín",
+      "definition": "比喻对不懂的人讲深奥的道理，白费口舌",
+      "meaning": "Playing a lute to a cow; wasting effort on the wrong audience",
+      "difficulty": "EASY",
+      "category": "communication",
+      "usage": "和他讲这些高深的理论，简直是对牛弹琴。",
+      "length": 4
+    },
+    {
+      "idiom": "狐假虎威",
+      "pinyin": "hú jiǎ hǔ wēi",
+      "definition": "比喻依仗别人的权势欺压人",
+      "meaning": "A fox borrowing a tiger's might; bullying others by relying on powerful connections",
+      "difficulty": "MEDIUM",
+      "category": "power",
+      "usage": "他只是狐假虎威，没有真本事。",
+      "length": 4
+    },
+    {
+      "idiom": "盲人摸象",
+      "pinyin": "máng rén mō xiàng",
+      "definition": "比喻对事物只有片面的了解",
+      "meaning": "Blind men feeling an elephant; partial understanding",
+      "difficulty": "EASY",
+      "category": "wisdom",
+      "usage": "你对这个项目的理解就像盲人摸象，需要全面了解。",
+      "length": 4
+    },
+    {
+      "idiom": "塞翁失马",
+      "pinyin": "sài wēng shī mǎ",
+      "definition": "比喻坏事在一定条件下可以变成好事",
+      "meaning": "The old man at the frontier lost his horse; a blessing in disguise",
+      "difficulty": "HARD",
+      "category": "philosophy",
+      "usage": "塞翁失马，焉知非福，不要对挫折太过悲观。",
+      "length": 4
+    },
+    {
+      "idiom": "半途而废",
+      "pinyin": "bàn tú ér fèi",
+      "definition": "比喻做事不能坚持到底，中途停止",
+      "meaning": "Giving up halfway; leaving things unfinished",
+      "difficulty": "EASY",
+      "category": "perseverance",
+      "usage": "做事要有始有终，不能半途而废。",
+      "length": 4
+    },
+    {
+      "idiom": "水滴石穿",
+      "pinyin": "shuǐ dī shí chuān",
+      "definition": "比喻力量虽小，只要坚持不懈，事情就能成功",
+      "meaning": "Dripping water wears through rock; persistence pays off",
+      "difficulty": "MEDIUM",
+      "category": "perseverance",
+      "usage": "学习要有水滴石穿的精神，持之以恒。",
+      "length": 4
+    }
+  ],
+  "metadata": {
+    "version": "1.0.0",
+    "lastUpdated": "2025-01-30",
+    "totalIdioms": 20,
+    "difficulties": {
+      "EASY": 5,
+      "MEDIUM": 8,
+      "HARD": 5,
+      "EXPERT": 2
+    },
+    "categories": {
+      "wisdom": 11,
+      "leadership": 1,
+      "logic": 1,
+      "communication": 1,
+      "power": 1,
+      "philosophy": 1,
+      "perseverance": 2
+    }
+  }
+}

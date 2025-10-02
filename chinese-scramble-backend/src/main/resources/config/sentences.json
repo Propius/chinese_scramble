@@ -1,0 +1,269 @@
+{
+  "sentences": [
+    {
+      "targetSentence": "我喜欢学习中文",
+      "pinyin": "wǒ xǐ huān xué xí zhōng wén",
+      "meaning": "I like learning Chinese",
+      "difficulty": "EASY",
+      "category": "daily-life",
+      "grammarPoints": ["subject-verb-object", "verb 喜欢", "noun phrase"],
+      "words": ["我", "喜欢", "学习", "中文"],
+      "length": 7,
+      "hints": {
+        "level1": "第一个词：我",
+        "level2": "句子结构：主语 + 动词 + 宾语",
+        "level3": "前半部分：我喜欢"
+      }
+    },
+    {
+      "targetSentence": "丽音屁股臭臭",
+      "pinyin": "lì yīn pì gu chòu chòu",
+      "meaning": "Liyin smelly butt",
+      "difficulty": "EASY",
+      "category": "daily-life",
+      "grammarPoints": ["subject-object-verb", "verb 臭臭", "noun phrase"],
+      "words": ["丽音", "屁股", "臭臭"],
+      "length": 6,
+      "hints": {
+        "level1": "第一个词：丽音",
+        "level2": "句子结构：主语 + 宾语 + 动词",
+        "level3": "前半部分：丽音屁股"
+      }
+    },
+    {
+      "targetSentence": "今天天气很好",
+      "pinyin": "jīn tiān tiān qì hěn hǎo",
+      "meaning": "The weather is very nice today",
+      "difficulty": "EASY",
+      "category": "weather",
+      "grammarPoints": ["time expression", "adjective 好", "adverb 很"],
+      "words": ["今天", "天气", "很", "好"],
+      "length": 6,
+      "hints": {
+        "level1": "第一个词：今天",
+        "level2": "句子结构：时间 + 主语 + 很 + 形容词",
+        "level3": "前半部分：今天天气"
+      }
+    },
+    {
+      "targetSentence": "他每天都运动",
+      "pinyin": "tā měi tiān dōu yùn dòng",
+      "meaning": "He exercises every day",
+      "difficulty": "EASY",
+      "category": "health",
+      "grammarPoints": ["frequency expression", "adverb 都", "verb 运动"],
+      "words": ["他", "每天", "都", "运动"],
+      "length": 6,
+      "hints": {
+        "level1": "第一个词：他",
+        "level2": "句子结构：主语 + 时间频率 + 都 + 动词",
+        "level3": "前半部分：他每天"
+      }
+    },
+    {
+      "targetSentence": "我们一起去图书馆",
+      "pinyin": "wǒ men yī qǐ qù tú shū guǎn",
+      "meaning": "Let's go to the library together",
+      "difficulty": "MEDIUM",
+      "category": "daily-life",
+      "grammarPoints": ["pronoun 我们", "adverb 一起", "directional verb 去"],
+      "words": ["我们", "一起", "去", "图书馆"],
+      "length": 8,
+      "hints": {
+        "level1": "第一个词：我们",
+        "level2": "句子结构：主语 + 一起 + 动词 + 地点",
+        "level3": "前半部分：我们一起去"
+      }
+    },
+    {
+      "targetSentence": "这个问题很复杂",
+      "pinyin": "zhè gè wèn tí hěn fù zá",
+      "meaning": "This problem is very complex",
+      "difficulty": "MEDIUM",
+      "category": "abstract",
+      "grammarPoints": ["demonstrative 这", "measure word 个", "adjective 复杂"],
+      "words": ["这个", "问题", "很", "复杂"],
+      "length": 7,
+      "hints": {
+        "level1": "第一个词：这个",
+        "level2": "句子结构：指示词 + 主语 + 很 + 形容词",
+        "level3": "前半部分：这个问题"
+      }
+    },
+    {
+      "targetSentence": "学好中文需要时间",
+      "pinyin": "xué hǎo zhōng wén xū yào shí jiān",
+      "meaning": "Learning Chinese well takes time",
+      "difficulty": "MEDIUM",
+      "category": "education",
+      "grammarPoints": ["resultative complement 好", "auxiliary verb 需要"],
+      "words": ["学好", "中文", "需要", "时间"],
+      "length": 8,
+      "hints": {
+        "level1": "第一个词：学好",
+        "level2": "句子结构：动词短语 + 需要 + 宾语",
+        "level3": "前半部分：学好中文"
+      }
+    },
+    {
+      "targetSentence": "她在公司工作五年了",
+      "pinyin": "tā zài gōng sī gōng zuò wǔ nián le",
+      "meaning": "She has been working at the company for five years",
+      "difficulty": "HARD",
+      "category": "work",
+      "grammarPoints": ["preposition 在", "duration expression", "aspect particle 了"],
+      "words": ["她", "在", "公司", "工作", "五年", "了"],
+      "length": 10,
+      "hints": {
+        "level1": "第一个词：她",
+        "level2": "句子结构：主语 + 在 + 地点 + 动词 + 时长 + 了",
+        "level3": "前半部分：她在公司工作"
+      }
+    },
+    {
+      "targetSentence": "如果明天下雨我们就不去了",
+      "pinyin": "rú guǒ míng tiān xià yǔ wǒ men jiù bù qù le",
+      "meaning": "If it rains tomorrow, we won't go",
+      "difficulty": "HARD",
+      "category": "conditional",
+      "grammarPoints": ["conditional 如果", "conjunction 就", "negation 不"],
+      "words": ["如果", "明天", "下雨", "我们", "就", "不去", "了"],
+      "length": 13,
+      "hints": {
+        "level1": "第一个词：如果",
+        "level2": "句子结构：如果 + 条件 + 就 + 结果",
+        "level3": "前半部分：如果明天下雨"
+      }
+    },
+    {
+      "targetSentence": "虽然很累但是我很开心",
+      "pinyin": "suī rán hěn lèi dàn shì wǒ hěn kāi xīn",
+      "meaning": "Although I'm tired, I'm very happy",
+      "difficulty": "HARD",
+      "category": "emotion",
+      "grammarPoints": ["concessive 虽然", "conjunction 但是", "adjective 开心"],
+      "words": ["虽然", "很", "累", "但是", "我", "很", "开心"],
+      "length": 11,
+      "hints": {
+        "level1": "第一个词：虽然",
+        "level2": "句子结构：虽然 + 让步 + 但是 + 转折",
+        "level3": "前半部分：虽然很累但是"
+      }
+    },
+    {
+      "targetSentence": "他不但会说英语而且会说法语",
+      "pinyin": "tā bù dàn huì shuō yīng yǔ ér qiě huì shuō fǎ yǔ",
+      "meaning": "He can speak not only English but also French",
+      "difficulty": "EXPERT",
+      "category": "ability",
+      "grammarPoints": ["correlative 不但...而且", "auxiliary verb 会", "parallel structure"],
+      "words": ["他", "不但", "会说", "英语", "而且", "会说", "法语"],
+      "length": 15,
+      "hints": {
+        "level1": "第一个词：他",
+        "level2": "句子结构：不但 + 动作1 + 而且 + 动作2",
+        "level3": "前半部分：他不但会说英语"
+      }
+    },
+    {
+      "targetSentence": "我建议你早点儿出发",
+      "pinyin": "wǒ jiàn yì nǐ zǎo diǎn er chū fā",
+      "meaning": "I suggest you leave earlier",
+      "difficulty": "MEDIUM",
+      "category": "suggestion",
+      "grammarPoints": ["verb 建议", "time expression 早点儿", "verb 出发"],
+      "words": ["我", "建议", "你", "早点儿", "出发"],
+      "length": 8,
+      "hints": {
+        "level1": "第一个词：我",
+        "level2": "句子结构：主语 + 建议 + 对象 + 动作",
+        "level3": "前半部分：我建议你"
+      }
+    },
+    {
+      "targetSentence": "这家餐厅的菜很好吃",
+      "pinyin": "zhè jiā cān tīng de cài hěn hǎo chī",
+      "meaning": "The food at this restaurant is delicious",
+      "difficulty": "EASY",
+      "category": "food",
+      "grammarPoints": ["possessive 的", "measure word 家", "adjective 好吃"],
+      "words": ["这家", "餐厅", "的", "菜", "很", "好吃"],
+      "length": 9,
+      "hints": {
+        "level1": "第一个词：这家",
+        "level2": "句子结构：指示词 + 主语 + 的 + 宾语 + 很 + 形容词",
+        "level3": "前半部分：这家餐厅的菜"
+      }
+    },
+    {
+      "targetSentence": "请把门关上",
+      "pinyin": "qǐng bǎ mén guān shàng",
+      "meaning": "Please close the door",
+      "difficulty": "MEDIUM",
+      "category": "daily-life",
+      "grammarPoints": ["ba-construction", "directional complement 上", "polite 请"],
+      "words": ["请", "把", "门", "关上"],
+      "length": 5,
+      "hints": {
+        "level1": "第一个词：请",
+        "level2": "句子结构：请 + 把 + 宾语 + 动词结果",
+        "level3": "前半部分：请把门"
+      }
+    },
+    {
+      "targetSentence": "他比我高一点儿",
+      "pinyin": "tā bǐ wǒ gāo yī diǎn er",
+      "meaning": "He is a bit taller than me",
+      "difficulty": "EASY",
+      "category": "comparison",
+      "grammarPoints": ["comparative 比", "measure of difference 一点儿"],
+      "words": ["他", "比", "我", "高", "一点儿"],
+      "length": 7,
+      "hints": {
+        "level1": "第一个词：他",
+        "level2": "句子结构：A + 比 + B + 形容词 + 程度",
+        "level3": "前半部分：他比我"
+      }
+    },
+    {
+      "targetSentence": "我已经做完作业了",
+      "pinyin": "wǒ yǐ jīng zuò wán zuò yè le",
+      "meaning": "I have already finished my homework",
+      "difficulty": "MEDIUM",
+      "category": "education",
+      "grammarPoints": ["adverb 已经", "resultative complement 完", "aspect particle 了"],
+      "words": ["我", "已经", "做完", "作业", "了"],
+      "length": 8,
+      "hints": {
+        "level1": "第一个词：我",
+        "level2": "句子结构：主语 + 已经 + 动词结果 + 宾语 + 了",
+        "level3": "前半部分：我已经做完"
+      }
+    }
+  ],
+  "metadata": {
+    "version": "1.0.0",
+    "lastUpdated": "2025-01-30",
+    "totalSentences": 15,
+    "difficulties": {
+      "EASY": 5,
+      "MEDIUM": 6,
+      "HARD": 3,
+      "EXPERT": 1
+    },
+    "categories": {
+      "daily-life": 3,
+      "weather": 1,
+      "health": 1,
+      "abstract": 1,
+      "education": 2,
+      "work": 1,
+      "conditional": 1,
+      "emotion": 1,
+      "ability": 1,
+      "suggestion": 1,
+      "food": 1,
+      "comparison": 1
+    }
+  }
+}
