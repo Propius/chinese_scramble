@@ -269,6 +269,7 @@ class LeaderboardRepositoryTest {
     @DisplayName("Should enforce unique constraint on player, game type, and difficulty")
     void testUniqueConstraint() {
         // Given
+        LocalDateTime now = LocalDateTime.now();
         Leaderboard duplicate = Leaderboard.builder()
             .player(player1)
             .gameType(GameType.IDIOM)
@@ -279,8 +280,10 @@ class LeaderboardRepositoryTest {
             .rank(1)
             .accuracyRate(0.95)
             .build();
+        duplicate.setCreatedAt(now);
+        duplicate.setUpdatedAt(now);
 
-        // When/Then
+        // When/Then - Testing unique constraint violation
         entityManager.persist(duplicate);
         org.junit.jupiter.api.Assertions.assertThrows(Exception.class, () -> {
             entityManager.flush();
@@ -360,9 +363,9 @@ class LeaderboardRepositoryTest {
             .accuracyRate(0.95)
             .build();
 
-        // When/Then
-        entityManager.persist(invalidEntry);
-        org.junit.jupiter.api.Assertions.assertThrows(Exception.class, () -> {
+        // When/Then - @PrePersist validation throws during persist()
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            entityManager.persist(invalidEntry);
             entityManager.flush();
         });
     }
@@ -382,9 +385,9 @@ class LeaderboardRepositoryTest {
             .accuracyRate(1.5) // Invalid: must be <= 1.0
             .build();
 
-        // When/Then
-        entityManager.persist(invalidEntry);
-        org.junit.jupiter.api.Assertions.assertThrows(Exception.class, () -> {
+        // When/Then - @PrePersist validation throws during persist()
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            entityManager.persist(invalidEntry);
             entityManager.flush();
         });
     }

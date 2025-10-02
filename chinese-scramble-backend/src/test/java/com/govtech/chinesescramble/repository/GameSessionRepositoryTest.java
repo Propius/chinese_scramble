@@ -35,6 +35,10 @@ class GameSessionRepositoryTest {
 
     @BeforeEach
     void setUp() {
+        // Clean all existing data to prevent test data leakage
+        gameSessionRepository.deleteAll();
+        playerRepository.deleteAll();
+
         LocalDateTime now = LocalDateTime.now();
         testPlayer = Player.builder()
             .username("gamer")

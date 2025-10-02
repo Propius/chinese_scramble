@@ -250,7 +250,8 @@ class IdiomScoreRepositoryTest {
             .findScoresInDateRange(testPlayer.getId(), start, end);
 
         // Then
-        assertThat(scoresInRange).hasSize(2); // score2 and score3
+        // All 3 scores (score1=-3h, score2=-2h, score3=-1h) are within last 6 hours
+        assertThat(scoresInRange).hasSize(3);
     }
 
     @Test
@@ -284,6 +285,7 @@ class IdiomScoreRepositoryTest {
     @DisplayName("Should save idiom score with Chinese characters")
     void testSaveIdiomScoreWithChineseCharacters() {
         // Given
+        LocalDateTime now = LocalDateTime.now();
         IdiomScore newScore = IdiomScore.builder()
             .player(testPlayer)
             .idiom("守株待兔")
@@ -294,6 +296,8 @@ class IdiomScoreRepositoryTest {
             .accuracyRate(0.95)
             .completed(true)
             .build();
+        newScore.setCreatedAt(now);
+        newScore.setUpdatedAt(now);
 
         // When
         IdiomScore saved = idiomScoreRepository.save(newScore);
@@ -321,9 +325,9 @@ class IdiomScoreRepositoryTest {
             .completed(true)
             .build();
 
-        // When/Then
-        entityManager.persist(invalidScore);
-        org.junit.jupiter.api.Assertions.assertThrows(Exception.class, () -> {
+        // When/Then - @PrePersist validation throws during persist()
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            entityManager.persist(invalidScore);
             entityManager.flush();
         });
     }
@@ -343,9 +347,9 @@ class IdiomScoreRepositoryTest {
             .completed(true)
             .build();
 
-        // When/Then
-        entityManager.persist(invalidScore);
-        org.junit.jupiter.api.Assertions.assertThrows(Exception.class, () -> {
+        // When/Then - @PrePersist validation throws during persist()
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            entityManager.persist(invalidScore);
             entityManager.flush();
         });
     }
