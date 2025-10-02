@@ -239,6 +239,10 @@ class GameSessionRepositoryTest {
         // Set audit timestamps manually for tests
         session.setCreatedAt(now);
         session.setUpdatedAt(now);
+        // Set completedAt for non-ACTIVE sessions (entity validation requirement)
+        if (status != SessionStatus.ACTIVE) {
+            session.setCompletedAt(now);
+        }
         return session;
     }
 

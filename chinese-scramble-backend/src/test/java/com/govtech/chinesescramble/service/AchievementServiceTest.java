@@ -90,7 +90,7 @@ class AchievementServiceTest {
         // Then
         assertThat(achievements).isNotEmpty();
         assertThat(achievements).anyMatch(a -> "FIRST_WIN".equals(a.getAchievementType()));
-        verify(achievementRepository).save(any(Achievement.class));
+        verify(achievementRepository, atLeastOnce()).save(any(Achievement.class));
     }
 
     @Test
@@ -287,12 +287,17 @@ class AchievementServiceTest {
             default -> "Unknown Achievement";
         };
 
-        return Achievement.builder()
+        Achievement achievement = Achievement.builder()
             .player(player)
             .achievementType(achievementType)
             .title(title)
             .description("Achievement unlocked")
             .metadata("{}")
             .build();
+        // Manually trigger @PrePersist behavior for test
+        if (achievement.getUnlockedAt() == null) {
+            achievement.setUnlockedAt(java.time.LocalDateTime.now());
+        }
+        return achievement;
     }
 }

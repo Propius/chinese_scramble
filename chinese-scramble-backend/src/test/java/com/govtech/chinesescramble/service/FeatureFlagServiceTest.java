@@ -164,14 +164,14 @@ class FeatureFlagServiceTest {
             createFeatureFlag("feature3", "Feature 3", true)
         );
 
-        when(featureFlagRepository.findAll()).thenReturn(flags);
+        when(featureFlagRepository.findAllOrderedByName()).thenReturn(flags);
 
         // When
         List<FeatureFlag> result = featureFlagService.getAllFeatures();
 
         // Then
         assertThat(result).hasSize(3);
-        verify(featureFlagRepository).findAll();
+        verify(featureFlagRepository).findAllOrderedByName();
     }
 
     @Test
