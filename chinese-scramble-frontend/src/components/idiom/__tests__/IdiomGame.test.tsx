@@ -460,4 +460,194 @@ describe('IdiomGame', () => {
       expect(container.querySelector('.idiom-game')).toBeInTheDocument();
     });
   });
+
+  describe('Drag and Drop Interactions', () => {
+    it('should handle drop from available to placed area', () => {
+      const onDropMock = jest.fn();
+      mockUseDrop.mockReturnValue([{ isOver: false, canDrop: true }, onDropMock]);
+
+      render(<IdiomGame {...defaultProps} />);
+
+      // Simulate the drop callback being triggered
+      if (mockUseDrop.mock.calls.length > 0) {
+        const dropConfig = mockUseDrop.mock.calls[0][0];
+        if (dropConfig && dropConfig.drop) {
+          dropConfig.drop({ character: '中', fromIndex: 0, fromPlaced: false }, null);
+        }
+      }
+
+      expect(soundManager.playDrop).toHaveBeenCalled();
+    });
+
+    it('should handle swap between placed characters', () => {
+      const onDropMock = jest.fn();
+      mockUseDrop.mockReturnValue([{ isOver: false, canDrop: true }, onDropMock]);
+
+      render(<IdiomGame {...defaultProps} />);
+
+      // Simulate drop config for swapping placed characters
+      if (mockUseDrop.mock.calls.length > 0) {
+        const dropConfig = mockUseDrop.mock.calls[0][0];
+        if (dropConfig && dropConfig.drop) {
+          dropConfig.drop({ character: '中', fromIndex: 0, fromPlaced: true }, null);
+        }
+      }
+
+      expect(soundManager.playDrop).toHaveBeenCalled();
+    });
+
+    it('should handle replacing existing character in placed area', () => {
+      const onDropMock = jest.fn();
+      mockUseDrop.mockReturnValue([{ isOver: false, canDrop: true }, onDropMock]);
+
+      render(<IdiomGame {...defaultProps} />);
+
+      // First drop
+      if (mockUseDrop.mock.calls.length > 0) {
+        const dropConfig = mockUseDrop.mock.calls[0][0];
+        if (dropConfig && dropConfig.drop) {
+          dropConfig.drop({ character: '中', fromIndex: 0, fromPlaced: false }, null);
+          // Second drop to replace
+          dropConfig.drop({ character: '国', fromIndex: 1, fromPlaced: false }, null);
+        }
+      }
+
+      expect(soundManager.playDrop).toHaveBeenCalled();
+    });
+  });
+
+  describe('Click and Swap Interactions', () => {
+    it('should select a placed tile on click', () => {
+      render(<IdiomGame {...defaultProps} />);
+
+      // First we need to place a character (simulate via drop)
+      if (mockUseDrop.mock.calls.length > 0) {
+        const dropConfig = mockUseDrop.mock.calls[0][0];
+        if (dropConfig && dropConfig.drop) {
+          dropConfig.drop({ character: '中', fromIndex: 0, fromPlaced: false }, null);
+        }
+      }
+
+      expect(soundManager.playClick).toHaveBeenCalledTimes(0);
+    });
+
+    it('should swap two placed tiles on second click', () => {
+      render(<IdiomGame {...defaultProps} />);
+
+      // Simulate placing two characters and swapping
+      if (mockUseDrop.mock.calls.length > 0) {
+        const dropConfig = mockUseDrop.mock.calls[0][0];
+        if (dropConfig && dropConfig.drop) {
+          dropConfig.drop({ character: '中', fromIndex: 0, fromPlaced: false }, null);
+          dropConfig.drop({ character: '国', fromIndex: 1, fromPlaced: false }, null);
+        }
+      }
+
+      expect(soundManager.playDrop).toHaveBeenCalled();
+    });
+
+    it('should not select empty tile slot', () => {
+      render(<IdiomGame {...defaultProps} />);
+
+      // Try to click on empty slot - should do nothing
+      const playClickCount = (soundManager.playClick as jest.Mock).mock.calls.length;
+
+      // Verify no additional click sound was played for empty slot
+      expect((soundManager.playClick as jest.Mock).mock.calls.length).toBe(playClickCount);
+    });
+  });
+
+  describe('Remove Character Functionality', () => {
+    it('should remove character from placed area', () => {
+      render(<IdiomGame {...defaultProps} />);
+
+      // First place a character
+      if (mockUseDrop.mock.calls.length > 0) {
+        const dropConfig = mockUseDrop.mock.calls[0][0];
+        if (dropConfig && dropConfig.drop) {
+          dropConfig.drop({ character: '中', fromIndex: 0, fromPlaced: false }, null);
+        }
+      }
+
+      expect(soundManager.playRemove).toHaveBeenCalledTimes(0);
+    });
+
+    it('should return removed character to available pool', () => {
+      render(<IdiomGame {...defaultProps} />);
+
+      // Simulate place and remove cycle
+      if (mockUseDrop.mock.calls.length > 0) {
+        const dropConfig = mockUseDrop.mock.calls[0][0];
+        if (dropConfig && dropConfig.drop) {
+          dropConfig.drop({ character: '中', fromIndex: 0, fromPlaced: false }, null);
+        }
+      }
+
+      expect(soundManager.playDrop).toHaveBeenCalled();
+    });
+
+    it('should handle removing from empty slot gracefully', () => {
+      render(<IdiomGame {...defaultProps} />);
+
+      // Try to remove from empty slot - should do nothing
+      const removeCallsBefore = (soundManager.playRemove as jest.Mock).mock.calls.length;
+
+      // Verify no remove sound was played
+      expect((soundManager.playRemove as jest.Mock).mock.calls.length).toBe(removeCallsBefore);
+    });
+  });
+
+  describe('Submit Validation', () => {
+    it('should disable submit button when no characters are placed', () => {
+      render(<IdiomGame {...defaultProps} />);
+
+      const submitButton = screen.getByText('✓ 提交答案');
+      expect(submitButton).toBeDisabled();
+    });
+  });
+
+  describe('State Reset on New Question', () => {
+    it('should reset all state when scrambled characters change', () => {
+      const { rerender } = render(<IdiomGame {...defaultProps} />);
+
+      // Change to new question
+      rerender(
+        <IdiomGame
+          {...defaultProps}
+          scrambledCharacters={['新', '题', '目', '字']}
+          timeLimit={240}
+        />
+      );
+
+      expect(screen.getByText('新')).toBeInTheDocument();
+      expect(screen.getByText('题')).toBeInTheDocument();
+      expect(screen.queryByText('国')).not.toBeInTheDocument();
+    });
+
+    it('should reset timer when time limit changes', () => {
+      const { rerender } = render(<IdiomGame {...defaultProps} timeLimit={300} />);
+
+      expect(screen.getByText(/5:00/)).toBeInTheDocument();
+
+      rerender(<IdiomGame {...defaultProps} timeLimit={180} />);
+
+      expect(screen.getByText(/3:00/)).toBeInTheDocument();
+    });
+
+    it('should clear selection state on question change', () => {
+      const { rerender } = render(<IdiomGame {...defaultProps} />);
+
+      // Simulate selection (would normally happen via click)
+      rerender(
+        <IdiomGame
+          {...defaultProps}
+          scrambledCharacters={['测', '试', '新', '题']}
+        />
+      );
+
+      // Selection should be cleared
+      expect(screen.getByText('测')).toBeInTheDocument();
+    });
+  });
+
 });

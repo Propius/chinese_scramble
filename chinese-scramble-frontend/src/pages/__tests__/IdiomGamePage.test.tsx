@@ -7,12 +7,26 @@ import { useIdiomGame } from '../../hooks/useIdiomGame';
 import apiClient from '../../services/api';
 import { soundManager } from '../../utils/soundManager';
 import { usernameUtils } from '../../utils/usernameUtils';
+import * as gameConstants from '../../constants/game.constants';
 
 // Mock dependencies
 jest.mock('../../hooks/useIdiomGame');
 jest.mock('../../services/api');
 jest.mock('../../utils/soundManager');
 jest.mock('../../utils/usernameUtils');
+jest.mock('../../constants/game.constants', () => ({
+  ...jest.requireActual('../../constants/game.constants'),
+  DEFAULT_FEATURE_FLAGS: {
+    ENABLE_IDIOM_SCRAMBLE: true,
+    ENABLE_SENTENCE_CRAFTING: true,
+    ENABLE_LEADERBOARD: true,
+    ENABLE_AUDIO_PRONUNCIATION: true,
+    ENABLE_HINTS: true,
+    ENABLE_PRACTICE_MODE: true,
+    ENABLE_ACHIEVEMENTS: true,
+    ENABLE_NO_REPEAT_QUESTIONS: true,
+  },
+}));
 jest.mock('react-i18next', () => ({
   useTranslation: () => ({
     t: (key: string) => {
@@ -113,6 +127,7 @@ describe('IdiomGamePage', () => {
       getHint: jest.fn(),
       setUserAnswer: jest.fn(),
       reset: jest.fn(),
+      clearError: jest.fn(),
     });
 
     // Rerender with updated state
@@ -142,6 +157,7 @@ describe('IdiomGamePage', () => {
       getHint: jest.fn(),
       setUserAnswer: jest.fn(),
       reset: jest.fn(),
+      clearError: jest.fn(),
     });
 
     mockUsernameUtils.getUsername.mockReturnValue('TestPlayer');
@@ -328,6 +344,7 @@ describe('IdiomGamePage', () => {
         getHint: jest.fn(),
         setUserAnswer: jest.fn(),
         reset: jest.fn(),
+        clearError: jest.fn(),
       });
 
       renderIdiomGamePage();
@@ -348,6 +365,7 @@ describe('IdiomGamePage', () => {
         getHint: jest.fn(),
         setUserAnswer: jest.fn(),
         reset: jest.fn(),
+        clearError: jest.fn(),
       });
 
       renderIdiomGamePage();
@@ -385,6 +403,7 @@ describe('IdiomGamePage', () => {
         getHint: jest.fn(),
         setUserAnswer: jest.fn(),
         reset: jest.fn(),
+        clearError: jest.fn(),
       });
 
       rerender(
@@ -1021,6 +1040,7 @@ describe('IdiomGamePage', () => {
         getHint: jest.fn(),
         setUserAnswer: jest.fn(),
         reset: jest.fn(),
+        clearError: jest.fn(),
       });
 
       renderIdiomGamePage();
@@ -1283,6 +1303,7 @@ describe('IdiomGamePage', () => {
         getHint: jest.fn(),
         setUserAnswer: jest.fn(),
         reset: jest.fn(),
+        clearError: jest.fn(),
       });
 
       renderIdiomGamePage();
@@ -1347,7 +1368,7 @@ describe('IdiomGamePage', () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByText('正确！')).toBeInTheDocument();
+        expect(screen.getByText('恭喜完成！')).toBeInTheDocument();
       });
 
       // Should show confetti for correct answer on last question
@@ -1406,6 +1427,7 @@ describe('IdiomGamePage', () => {
         getHint: jest.fn(),
         setUserAnswer: jest.fn(),
         reset: jest.fn(),
+        clearError: jest.fn(),
       });
 
       const { rerender } = renderIdiomGamePage();
@@ -1436,7 +1458,27 @@ describe('IdiomGamePage', () => {
     });
   });
 
-  describe('Error Recovery After Submit', () => {
+  describe('Error Recovery After Submit (with NO_REPEAT disabled)', () => {
+    // Override the feature flag for these tests
+    let originalFlagValue: boolean;
+
+    beforeAll(() => {
+      originalFlagValue = gameConstants.DEFAULT_FEATURE_FLAGS.ENABLE_NO_REPEAT_QUESTIONS;
+      Object.defineProperty(gameConstants.DEFAULT_FEATURE_FLAGS, 'ENABLE_NO_REPEAT_QUESTIONS', {
+        value: false,
+        writable: true,
+        configurable: true,
+      });
+    });
+
+    afterAll(() => {
+      Object.defineProperty(gameConstants.DEFAULT_FEATURE_FLAGS, 'ENABLE_NO_REPEAT_QUESTIONS', {
+        value: originalFlagValue,
+        writable: true,
+        configurable: true,
+      });
+    });
+
     it('should handle completion error and call restart when loading next question', async () => {
       const mockResult = { isCorrect: true, score: 100 };
       const completionError = {
@@ -1541,6 +1583,7 @@ describe('IdiomGamePage', () => {
         getHint: jest.fn(),
         setUserAnswer: jest.fn(),
         reset: jest.fn(),
+        clearError: jest.fn(),
       });
 
       rerender(
@@ -1579,6 +1622,7 @@ describe('IdiomGamePage', () => {
         getHint: jest.fn(),
         setUserAnswer: jest.fn(),
         reset: jest.fn(),
+        clearError: jest.fn(),
       });
 
       renderIdiomGamePage();
@@ -1663,6 +1707,7 @@ describe('IdiomGamePage', () => {
         getHint: jest.fn(),
         setUserAnswer: jest.fn(),
         reset: jest.fn(),
+        clearError: jest.fn(),
       });
 
       renderIdiomGamePage();
