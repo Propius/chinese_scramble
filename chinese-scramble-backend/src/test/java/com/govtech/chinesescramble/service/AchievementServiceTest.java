@@ -599,7 +599,274 @@ class AchievementServiceTest {
         assertThat(result.get(0).getAchievementType()).isEqualTo("FIRST_WIN");
     }
 
+    // ========================================================================
+    // checkIdiomMaster() Tests - 0% coverage (private method via reflection)
+    // ========================================================================
+
+    @Test
+    void testCheckIdiomMaster_HasFirstPlace() throws Exception {
+        // Given
+        Long playerId = 1L;
+        com.govtech.chinesescramble.entity.Leaderboard idiomFirstPlace = createLeaderboardEntry(
+            playerId,
+            1,
+            com.govtech.chinesescramble.entity.enums.GameType.IDIOM,
+            com.govtech.chinesescramble.entity.enums.DifficultyLevel.MEDIUM
+        );
+
+        when(playerRepository.findById(playerId)).thenReturn(Optional.of(testPlayer));
+        when(leaderboardRepository.findFirstPlaceEntriesByPlayer(playerId))
+            .thenReturn(List.of(idiomFirstPlace));
+
+        // When - Use reflection to call private method
+        java.lang.reflect.Method method = AchievementService.class
+            .getDeclaredMethod("checkIdiomMaster", Long.class);
+        method.setAccessible(true);
+        @SuppressWarnings("unchecked")
+        List<Achievement> achievements = (List<Achievement>) method.invoke(achievementService, playerId);
+
+        // Then
+        assertThat(achievements).hasSize(1);
+        assertThat(achievements.get(0).getAchievementType()).isEqualTo("IDIOM_MASTER");
+        verify(leaderboardRepository).findFirstPlaceEntriesByPlayer(playerId);
+    }
+
+    @Test
+    void testCheckIdiomMaster_NoFirstPlace() throws Exception {
+        // Given
+        Long playerId = 1L;
+        com.govtech.chinesescramble.entity.Leaderboard sentenceSecondPlace = createLeaderboardEntry(
+            playerId,
+            2,
+            com.govtech.chinesescramble.entity.enums.GameType.SENTENCE,
+            com.govtech.chinesescramble.entity.enums.DifficultyLevel.EASY
+        );
+
+        when(leaderboardRepository.findFirstPlaceEntriesByPlayer(playerId))
+            .thenReturn(List.of(sentenceSecondPlace)); // Sentence, not idiom
+
+        // When
+        java.lang.reflect.Method method = AchievementService.class
+            .getDeclaredMethod("checkIdiomMaster", Long.class);
+        method.setAccessible(true);
+        @SuppressWarnings("unchecked")
+        List<Achievement> achievements = (List<Achievement>) method.invoke(achievementService, playerId);
+
+        // Then
+        assertThat(achievements).isEmpty();
+    }
+
+    @Test
+    void testCheckIdiomMaster_EmptyFirstPlaceEntries() throws Exception {
+        // Given
+        Long playerId = 1L;
+
+        when(leaderboardRepository.findFirstPlaceEntriesByPlayer(playerId))
+            .thenReturn(List.of()); // No first place entries
+
+        // When
+        java.lang.reflect.Method method = AchievementService.class
+            .getDeclaredMethod("checkIdiomMaster", Long.class);
+        method.setAccessible(true);
+        @SuppressWarnings("unchecked")
+        List<Achievement> achievements = (List<Achievement>) method.invoke(achievementService, playerId);
+
+        // Then
+        assertThat(achievements).isEmpty();
+    }
+
+    @Test
+    void testCheckIdiomMaster_AlreadyUnlocked() throws Exception {
+        // Given
+        Long playerId = 1L;
+        com.govtech.chinesescramble.entity.Leaderboard idiomFirstPlace = createLeaderboardEntry(
+            playerId,
+            1,
+            com.govtech.chinesescramble.entity.enums.GameType.IDIOM,
+            com.govtech.chinesescramble.entity.enums.DifficultyLevel.HARD
+        );
+
+        when(achievementRepository.existsByPlayerIdAndAchievementType(playerId, "IDIOM_MASTER"))
+            .thenReturn(true); // Already has achievement
+        when(leaderboardRepository.findFirstPlaceEntriesByPlayer(playerId))
+            .thenReturn(List.of(idiomFirstPlace));
+
+        // When
+        java.lang.reflect.Method method = AchievementService.class
+            .getDeclaredMethod("checkIdiomMaster", Long.class);
+        method.setAccessible(true);
+        @SuppressWarnings("unchecked")
+        List<Achievement> achievements = (List<Achievement>) method.invoke(achievementService, playerId);
+
+        // Then
+        assertThat(achievements).isEmpty();
+    }
+
+    // ========================================================================
+    // checkSentenceMaster() Tests - 0% coverage (private method via reflection)
+    // ========================================================================
+
+    @Test
+    void testCheckSentenceMaster_HasFirstPlace() throws Exception {
+        // Given
+        Long playerId = 1L;
+        com.govtech.chinesescramble.entity.Leaderboard sentenceFirstPlace = createLeaderboardEntry(
+            playerId,
+            1,
+            com.govtech.chinesescramble.entity.enums.GameType.SENTENCE,
+            com.govtech.chinesescramble.entity.enums.DifficultyLevel.EASY
+        );
+
+        when(playerRepository.findById(playerId)).thenReturn(Optional.of(testPlayer));
+        when(leaderboardRepository.findFirstPlaceEntriesByPlayer(playerId))
+            .thenReturn(List.of(sentenceFirstPlace));
+
+        // When
+        java.lang.reflect.Method method = AchievementService.class
+            .getDeclaredMethod("checkSentenceMaster", Long.class);
+        method.setAccessible(true);
+        @SuppressWarnings("unchecked")
+        List<Achievement> achievements = (List<Achievement>) method.invoke(achievementService, playerId);
+
+        // Then
+        assertThat(achievements).hasSize(1);
+        assertThat(achievements.get(0).getAchievementType()).isEqualTo("SENTENCE_MASTER");
+        verify(leaderboardRepository).findFirstPlaceEntriesByPlayer(playerId);
+    }
+
+    @Test
+    void testCheckSentenceMaster_NoFirstPlace() throws Exception {
+        // Given
+        Long playerId = 1L;
+        com.govtech.chinesescramble.entity.Leaderboard idiomSecondPlace = createLeaderboardEntry(
+            playerId,
+            2,
+            com.govtech.chinesescramble.entity.enums.GameType.IDIOM,
+            com.govtech.chinesescramble.entity.enums.DifficultyLevel.HARD
+        );
+
+        when(leaderboardRepository.findFirstPlaceEntriesByPlayer(playerId))
+            .thenReturn(List.of(idiomSecondPlace)); // Idiom, not sentence
+
+        // When
+        java.lang.reflect.Method method = AchievementService.class
+            .getDeclaredMethod("checkSentenceMaster", Long.class);
+        method.setAccessible(true);
+        @SuppressWarnings("unchecked")
+        List<Achievement> achievements = (List<Achievement>) method.invoke(achievementService, playerId);
+
+        // Then
+        assertThat(achievements).isEmpty();
+    }
+
+    @Test
+    void testCheckSentenceMaster_EmptyFirstPlaceEntries() throws Exception {
+        // Given
+        Long playerId = 1L;
+
+        when(leaderboardRepository.findFirstPlaceEntriesByPlayer(playerId))
+            .thenReturn(List.of()); // No first place entries
+
+        // When
+        java.lang.reflect.Method method = AchievementService.class
+            .getDeclaredMethod("checkSentenceMaster", Long.class);
+        method.setAccessible(true);
+        @SuppressWarnings("unchecked")
+        List<Achievement> achievements = (List<Achievement>) method.invoke(achievementService, playerId);
+
+        // Then
+        assertThat(achievements).isEmpty();
+    }
+
+    @Test
+    void testCheckSentenceMaster_AlreadyUnlocked() throws Exception {
+        // Given
+        Long playerId = 1L;
+        com.govtech.chinesescramble.entity.Leaderboard sentenceFirstPlace = createLeaderboardEntry(
+            playerId,
+            1,
+            com.govtech.chinesescramble.entity.enums.GameType.SENTENCE,
+            com.govtech.chinesescramble.entity.enums.DifficultyLevel.MEDIUM
+        );
+
+        when(achievementRepository.existsByPlayerIdAndAchievementType(playerId, "SENTENCE_MASTER"))
+            .thenReturn(true); // Already has achievement
+        when(leaderboardRepository.findFirstPlaceEntriesByPlayer(playerId))
+            .thenReturn(List.of(sentenceFirstPlace));
+
+        // When
+        java.lang.reflect.Method method = AchievementService.class
+            .getDeclaredMethod("checkSentenceMaster", Long.class);
+        method.setAccessible(true);
+        @SuppressWarnings("unchecked")
+        List<Achievement> achievements = (List<Achievement>) method.invoke(achievementService, playerId);
+
+        // Then
+        assertThat(achievements).isEmpty();
+    }
+
+    @Test
+    void testCheckBothMasters_BothUnlocked() throws Exception {
+        // Given - Player has first place in both game types
+        Long playerId = 1L;
+        com.govtech.chinesescramble.entity.Leaderboard idiomFirstPlace = createLeaderboardEntry(
+            playerId,
+            1,
+            com.govtech.chinesescramble.entity.enums.GameType.IDIOM,
+            com.govtech.chinesescramble.entity.enums.DifficultyLevel.HARD
+        );
+        com.govtech.chinesescramble.entity.Leaderboard sentenceFirstPlace = createLeaderboardEntry(
+            playerId,
+            1,
+            com.govtech.chinesescramble.entity.enums.GameType.SENTENCE,
+            com.govtech.chinesescramble.entity.enums.DifficultyLevel.MEDIUM
+        );
+
+        when(playerRepository.findById(playerId)).thenReturn(Optional.of(testPlayer));
+        when(leaderboardRepository.findFirstPlaceEntriesByPlayer(playerId))
+            .thenReturn(List.of(idiomFirstPlace, sentenceFirstPlace));
+
+        // When - call both methods
+        java.lang.reflect.Method idiomMethod = AchievementService.class
+            .getDeclaredMethod("checkIdiomMaster", Long.class);
+        idiomMethod.setAccessible(true);
+        @SuppressWarnings("unchecked")
+        List<Achievement> idiomAchievements = (List<Achievement>) idiomMethod.invoke(achievementService, playerId);
+
+        java.lang.reflect.Method sentenceMethod = AchievementService.class
+            .getDeclaredMethod("checkSentenceMaster", Long.class);
+        sentenceMethod.setAccessible(true);
+        @SuppressWarnings("unchecked")
+        List<Achievement> sentenceAchievements = (List<Achievement>) sentenceMethod.invoke(achievementService, playerId);
+
+        // Then
+        assertThat(idiomAchievements).hasSize(1);
+        assertThat(idiomAchievements.get(0).getAchievementType()).isEqualTo("IDIOM_MASTER");
+        assertThat(sentenceAchievements).hasSize(1);
+        assertThat(sentenceAchievements.get(0).getAchievementType()).isEqualTo("SENTENCE_MASTER");
+    }
+
     // Helper methods
+
+    private com.govtech.chinesescramble.entity.Leaderboard createLeaderboardEntry(
+        Long playerId,
+        Integer rank,
+        com.govtech.chinesescramble.entity.enums.GameType gameType,
+        com.govtech.chinesescramble.entity.enums.DifficultyLevel difficulty
+    ) {
+        com.govtech.chinesescramble.entity.Leaderboard entry =
+            com.govtech.chinesescramble.entity.Leaderboard.builder()
+                .player(testPlayer)
+                .gameType(gameType)
+                .difficulty(difficulty)
+                .rank(rank)
+                .totalScore(1000)
+                .gamesPlayed(10)
+                .averageScore(100.0)
+                .accuracyRate(95.0)
+                .build();
+        return entry;
+    }
 
     private com.govtech.chinesescramble.entity.Leaderboard createLeaderboardEntry(Long playerId, Integer rank) {
         com.govtech.chinesescramble.entity.Leaderboard entry =
