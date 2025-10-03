@@ -252,7 +252,369 @@ class AchievementServiceTest {
         assertThat(achievements).noneMatch(a -> "HUNDRED_GAMES".equals(a.getAchievementType()));
     }
 
+    @Test
+    void testCheckTopRanked() {
+        // Given
+        Long playerId = 1L;
+        com.govtech.chinesescramble.entity.Leaderboard topEntry = createLeaderboardEntry(playerId, 5);
+
+        when(playerRepository.findById(playerId)).thenReturn(Optional.of(testPlayer));
+        when(leaderboardRepository.findTopTenEntriesByPlayer(playerId))
+            .thenReturn(List.of(topEntry));
+        when(idiomScoreRepository.countCompletedGamesByPlayer(playerId)).thenReturn(1L);
+        when(sentenceScoreRepository.countCompletedGamesByPlayer(playerId)).thenReturn(0L);
+
+        // When
+        List<Achievement> achievements = achievementService
+            .checkAndUnlockAchievements(playerId, 200, 50, 0.9, 1);
+
+        // Then
+        assertThat(achievements).anyMatch(a -> "TOP_RANKED".equals(a.getAchievementType()));
+    }
+
+    @Test
+    void testCheckTopRanked_NotInTopTen() {
+        // Given
+        Long playerId = 1L;
+
+        when(playerRepository.findById(playerId)).thenReturn(Optional.of(testPlayer));
+        when(leaderboardRepository.findTopTenEntriesByPlayer(playerId))
+            .thenReturn(List.of()); // Empty list
+        when(idiomScoreRepository.countCompletedGamesByPlayer(playerId)).thenReturn(1L);
+        when(sentenceScoreRepository.countCompletedGamesByPlayer(playerId)).thenReturn(0L);
+
+        // When
+        List<Achievement> achievements = achievementService
+            .checkAndUnlockAchievements(playerId, 200, 50, 0.9, 1);
+
+        // Then
+        assertThat(achievements).noneMatch(a -> "TOP_RANKED".equals(a.getAchievementType()));
+    }
+
+    @Test
+    void testCheckHintFree() {
+        // Given
+        Long playerId = 1L;
+
+        when(playerRepository.findById(playerId)).thenReturn(Optional.of(testPlayer));
+        when(idiomScoreRepository.countHintFreeGamesByPlayer(playerId)).thenReturn(6L);
+        when(sentenceScoreRepository.countHintFreeGamesByPlayer(playerId)).thenReturn(4L); // Total: 10
+        when(idiomScoreRepository.countCompletedGamesByPlayer(playerId)).thenReturn(1L);
+        when(sentenceScoreRepository.countCompletedGamesByPlayer(playerId)).thenReturn(0L);
+
+        // When
+        List<Achievement> achievements = achievementService
+            .checkAndUnlockAchievements(playerId, 200, 50, 0.9, 0);
+
+        // Then
+        assertThat(achievements).anyMatch(a -> "HINT_FREE".equals(a.getAchievementType()));
+    }
+
+    @Test
+    void testCheckHintFree_NotYetReached() {
+        // Given
+        Long playerId = 1L;
+
+        when(playerRepository.findById(playerId)).thenReturn(Optional.of(testPlayer));
+        when(idiomScoreRepository.countHintFreeGamesByPlayer(playerId)).thenReturn(4L);
+        when(sentenceScoreRepository.countHintFreeGamesByPlayer(playerId)).thenReturn(3L); // Total: 7
+        when(idiomScoreRepository.countCompletedGamesByPlayer(playerId)).thenReturn(1L);
+        when(sentenceScoreRepository.countCompletedGamesByPlayer(playerId)).thenReturn(0L);
+
+        // When
+        List<Achievement> achievements = achievementService
+            .checkAndUnlockAchievements(playerId, 200, 50, 0.9, 0);
+
+        // Then
+        assertThat(achievements).noneMatch(a -> "HINT_FREE".equals(a.getAchievementType()));
+    }
+
+    @Test
+    void testGetRecentAchievements() {
+        // Given
+        Long playerId = 1L;
+        List<Achievement> recentAchievements = List.of(
+            createAchievement(testPlayer, "FIRST_WIN"),
+            createAchievement(testPlayer, "SPEED_DEMON")
+        );
+
+        when(achievementRepository.findRecentAchievements(eq(playerId), any(java.time.LocalDateTime.class)))
+            .thenReturn(recentAchievements);
+
+        // When
+        List<Achievement> result = achievementService.getRecentAchievements(playerId);
+
+        // Then
+        assertThat(result).hasSize(2);
+        verify(achievementRepository).findRecentAchievements(eq(playerId), any(java.time.LocalDateTime.class));
+    }
+
+    @Test
+    void testGetAchievementCount() {
+        // Given
+        Long playerId = 1L;
+        when(achievementRepository.countByPlayerId(playerId)).thenReturn(5L);
+
+        // When
+        long count = achievementService.getAchievementCount(playerId);
+
+        // Then
+        assertThat(count).isEqualTo(5L);
+        verify(achievementRepository).countByPlayerId(playerId);
+    }
+
+    @Test
+    void testGetAchievementRarity() {
+        // Given
+        String achievementType = "FIRST_WIN";
+        when(playerRepository.count()).thenReturn(100L);
+        when(achievementRepository.countByAchievementType(achievementType)).thenReturn(25L);
+
+        // When
+        double rarity = achievementService.getAchievementRarity(achievementType);
+
+        // Then
+        assertThat(rarity).isEqualTo(25.0); // 25% of players have it
+        verify(playerRepository).count();
+        verify(achievementRepository).countByAchievementType(achievementType);
+    }
+
+    @Test
+    void testGetAchievementRarity_NoPlayers() {
+        // Given - Test division by zero handling
+        String achievementType = "FIRST_WIN";
+        when(playerRepository.count()).thenReturn(0L);
+
+        // When
+        double rarity = achievementService.getAchievementRarity(achievementType);
+
+        // Then
+        assertThat(rarity).isEqualTo(0.0);
+        verify(playerRepository).count();
+        verify(achievementRepository, never()).countByAchievementType(anyString());
+    }
+
+    @Test
+    void testGetAchievementStatistics() {
+        // Given
+        List<Object[]> distribution = List.of(
+            new Object[]{"FIRST_WIN", 50L},
+            new Object[]{"SPEED_DEMON", 30L},
+            new Object[]{"PERFECT_SCORE", 20L}
+        );
+        when(achievementRepository.getAchievementDistribution()).thenReturn(distribution);
+
+        // When
+        java.util.Map<String, Long> stats = achievementService.getAchievementStatistics();
+
+        // Then
+        assertThat(stats).hasSize(3);
+        assertThat(stats.get("FIRST_WIN")).isEqualTo(50L);
+        assertThat(stats.get("SPEED_DEMON")).isEqualTo(30L);
+        assertThat(stats.get("PERFECT_SCORE")).isEqualTo(20L);
+        verify(achievementRepository).getAchievementDistribution();
+    }
+
+    @Test
+    void testGetAchievementStatistics_Empty() {
+        // Given
+        when(achievementRepository.getAchievementDistribution()).thenReturn(List.of());
+
+        // When
+        java.util.Map<String, Long> stats = achievementService.getAchievementStatistics();
+
+        // Then
+        assertThat(stats).isEmpty();
+        verify(achievementRepository).getAchievementDistribution();
+    }
+
+    @Test
+    void testHasAchievement_True() {
+        // Given
+        Long playerId = 1L;
+        String achievementType = "FIRST_WIN";
+        when(achievementRepository.existsByPlayerIdAndAchievementType(playerId, achievementType))
+            .thenReturn(true);
+
+        // When
+        boolean hasIt = achievementService.hasAchievement(playerId, achievementType);
+
+        // Then
+        assertThat(hasIt).isTrue();
+        verify(achievementRepository).existsByPlayerIdAndAchievementType(playerId, achievementType);
+    }
+
+    @Test
+    void testHasAchievement_False() {
+        // Given
+        Long playerId = 1L;
+        String achievementType = "SPEED_DEMON";
+        when(achievementRepository.existsByPlayerIdAndAchievementType(playerId, achievementType))
+            .thenReturn(false);
+
+        // When
+        boolean hasIt = achievementService.hasAchievement(playerId, achievementType);
+
+        // Then
+        assertThat(hasIt).isFalse();
+        verify(achievementRepository).existsByPlayerIdAndAchievementType(playerId, achievementType);
+    }
+
+    @Test
+    void testUnlockAchievement_JsonConversionError() throws Exception {
+        // Given
+        Long playerId = 1L;
+        when(playerRepository.findById(playerId)).thenReturn(Optional.of(testPlayer));
+        when(objectMapper.writeValueAsString(any())).thenThrow(new RuntimeException("JSON error"));
+        when(idiomScoreRepository.countCompletedGamesByPlayer(playerId)).thenReturn(1L);
+        when(sentenceScoreRepository.countCompletedGamesByPlayer(playerId)).thenReturn(0L);
+
+        // When
+        List<Achievement> achievements = achievementService
+            .checkAndUnlockAchievements(playerId, 200, 50, 0.9, 1);
+
+        // Then - Should still unlock achievement with empty JSON metadata
+        assertThat(achievements).isNotEmpty();
+        verify(achievementRepository, atLeastOnce()).save(any(Achievement.class));
+    }
+
+    @Test
+    void testCheckSpeedDemon_ExactlyAtThreshold() {
+        // Given - Test boundary condition (29 seconds, still under 30)
+        Long playerId = 1L;
+        when(playerRepository.findById(playerId)).thenReturn(Optional.of(testPlayer));
+        when(idiomScoreRepository.countCompletedGamesByPlayer(playerId)).thenReturn(1L);
+        when(sentenceScoreRepository.countCompletedGamesByPlayer(playerId)).thenReturn(0L);
+
+        // When
+        List<Achievement> achievements = achievementService
+            .checkAndUnlockAchievements(playerId, 200, 29, 0.9, 1);
+
+        // Then
+        assertThat(achievements).anyMatch(a -> "SPEED_DEMON".equals(a.getAchievementType()));
+    }
+
+    @Test
+    void testCheckSpeedDemon_JustOverThreshold() {
+        // Given - Test boundary condition (30 seconds, at threshold)
+        Long playerId = 1L;
+        when(playerRepository.findById(playerId)).thenReturn(Optional.of(testPlayer));
+        when(idiomScoreRepository.countCompletedGamesByPlayer(playerId)).thenReturn(1L);
+        when(sentenceScoreRepository.countCompletedGamesByPlayer(playerId)).thenReturn(0L);
+
+        // When
+        List<Achievement> achievements = achievementService
+            .checkAndUnlockAchievements(playerId, 200, 30, 0.9, 1);
+
+        // Then
+        assertThat(achievements).noneMatch(a -> "SPEED_DEMON".equals(a.getAchievementType()));
+    }
+
+    @Test
+    void testCheckPerfectScore_WithHints() {
+        // Given - Perfect accuracy but used hints
+        Long playerId = 1L;
+        when(playerRepository.findById(playerId)).thenReturn(Optional.of(testPlayer));
+        when(idiomScoreRepository.countCompletedGamesByPlayer(playerId)).thenReturn(1L);
+        when(sentenceScoreRepository.countCompletedGamesByPlayer(playerId)).thenReturn(0L);
+
+        // When
+        List<Achievement> achievements = achievementService
+            .checkAndUnlockAchievements(playerId, 250, 40, 1.0, 1); // Used 1 hint
+
+        // Then
+        assertThat(achievements).noneMatch(a -> "PERFECT_SCORE".equals(a.getAchievementType()));
+    }
+
+    @Test
+    void testCheckPerfectScore_ImperfectAccuracy() {
+        // Given - No hints but accuracy not perfect
+        Long playerId = 1L;
+        when(playerRepository.findById(playerId)).thenReturn(Optional.of(testPlayer));
+        when(idiomScoreRepository.countCompletedGamesByPlayer(playerId)).thenReturn(1L);
+        when(sentenceScoreRepository.countCompletedGamesByPlayer(playerId)).thenReturn(0L);
+
+        // When
+        List<Achievement> achievements = achievementService
+            .checkAndUnlockAchievements(playerId, 250, 40, 0.99, 0); // 99% accuracy
+
+        // Then
+        assertThat(achievements).noneMatch(a -> "PERFECT_SCORE".equals(a.getAchievementType()));
+    }
+
+    @Test
+    void testCheckHighScorer_ExactlyAtThreshold() {
+        // Given - Exactly 1000 points
+        Long playerId = 1L;
+        when(playerRepository.findById(playerId)).thenReturn(Optional.of(testPlayer));
+        when(idiomScoreRepository.countCompletedGamesByPlayer(playerId)).thenReturn(1L);
+        when(sentenceScoreRepository.countCompletedGamesByPlayer(playerId)).thenReturn(0L);
+
+        // When
+        List<Achievement> achievements = achievementService
+            .checkAndUnlockAchievements(playerId, 1000, 40, 0.9, 1);
+
+        // Then
+        assertThat(achievements).anyMatch(a -> "HIGH_SCORER".equals(a.getAchievementType()));
+    }
+
+    @Test
+    void testCheckHighScorer_JustUnderThreshold() {
+        // Given - 999 points (just under)
+        Long playerId = 1L;
+        when(playerRepository.findById(playerId)).thenReturn(Optional.of(testPlayer));
+        when(idiomScoreRepository.countCompletedGamesByPlayer(playerId)).thenReturn(1L);
+        when(sentenceScoreRepository.countCompletedGamesByPlayer(playerId)).thenReturn(0L);
+
+        // When
+        List<Achievement> achievements = achievementService
+            .checkAndUnlockAchievements(playerId, 999, 40, 0.9, 1);
+
+        // Then
+        assertThat(achievements).noneMatch(a -> "HIGH_SCORER".equals(a.getAchievementType()));
+    }
+
+    @Test
+    void testGetUnlockedAchievements_WithNullUnlockedAt() {
+        // Given
+        Long playerId = 1L;
+        Achievement unlockedAchievement = createAchievement(testPlayer, "FIRST_WIN");
+        Achievement lockedAchievement = Achievement.builder()
+            .player(testPlayer)
+            .achievementType("LOCKED")
+            .title("Locked")
+            .description("Not yet unlocked")
+            .metadata("{}")
+            .build();
+        // Don't set unlockedAt for locked achievement
+
+        when(achievementRepository.findByPlayerId(playerId))
+            .thenReturn(List.of(unlockedAchievement, lockedAchievement));
+
+        // When
+        List<Achievement> result = achievementService.getUnlockedAchievements(playerId);
+
+        // Then
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getAchievementType()).isEqualTo("FIRST_WIN");
+    }
+
     // Helper methods
+
+    private com.govtech.chinesescramble.entity.Leaderboard createLeaderboardEntry(Long playerId, Integer rank) {
+        com.govtech.chinesescramble.entity.Leaderboard entry =
+            com.govtech.chinesescramble.entity.Leaderboard.builder()
+                .player(testPlayer)
+                .gameType(com.govtech.chinesescramble.entity.enums.GameType.IDIOM)
+                .difficulty(com.govtech.chinesescramble.entity.enums.DifficultyLevel.MEDIUM)
+                .rank(rank)
+                .totalScore(1000)
+                .gamesPlayed(10)
+                .averageScore(100.0)
+                .accuracyRate(95.0)
+                .build();
+        return entry;
+    }
 
     private Player createPlayer(Long id, String username) {
         Player player = Player.builder()
