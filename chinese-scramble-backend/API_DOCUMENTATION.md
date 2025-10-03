@@ -262,17 +262,11 @@ curl -X GET http://localhost:8080/api/players/1 \
 
 #### Start Idiom Game
 
-**Endpoint**: `POST /api/games/idiom/start`
+**Endpoint**: `GET /api/idiom-game/start`
 
 **Query Parameters**:
-- `playerId` (Long, required): Player ID
-
-**Request Body**:
-```json
-{
-  "difficulty": "EASY | MEDIUM | HARD | EXPERT"
-}
-```
+- `difficulty` (String, required): EASY, MEDIUM, HARD, or EXPERT
+- `playerId` (String, optional): Player ID or username (auto-creates player if username provided)
 
 **Response**: `200 OK`
 ```json
@@ -301,15 +295,17 @@ curl -X GET http://localhost:8080/api/players/1 \
 
 #### Submit Idiom Answer
 
-**Endpoint**: `POST /api/games/idiom/submit`
+**Endpoint**: `POST /api/idiom-game/submit`
+
+**Query Parameters**:
+- `playerId` (String, optional): Player ID or username
 
 **Request Body**:
 ```json
 {
-  "playerId": 1,
-  "sessionId": "abc123",
   "answer": "一马当先",
-  "timeTaken": 45
+  "timeTaken": 45,
+  "hintsUsed": 0
 }
 ```
 
@@ -344,11 +340,13 @@ Final Score = Base Score + Time Bonus - Hint Penalty
 
 #### Request Hint
 
-**Endpoint**: `POST /api/games/idiom/hint`
+**Endpoint**: `POST /api/idiom-game/hint/{level}`
+
+**Path Parameters**:
+- `level` (Integer): Hint level (1, 2, or 3)
 
 **Query Parameters**:
-- `playerId` (Long, required): Player ID
-- `sessionId` (String, required): Game session ID
+- `playerId` (String, optional): Player ID or username
 
 **Response**: `200 OK`
 ```json
@@ -371,12 +369,36 @@ Final Score = Base Score + Time Bonus - Hint Penalty
 
 ---
 
-#### Restart Idiom Game
+#### Get Player History
 
-**Endpoint**: `POST /api/games/idiom/restart`
+**Endpoint**: `GET /api/idiom-game/history/{playerId}`
+
+**Path Parameters**:
+- `playerId` (Long): Player ID
+
+**Response**: `200 OK`
+```json
+[
+  {
+    "idiomId": 10,
+    "idiom": "一马当先",
+    "score": 450,
+    "difficulty": "EASY",
+    "timeTaken": 45,
+    "hintsUsed": 0,
+    "completedAt": "2025-10-02T14:30:00"
+  }
+]
+```
+
+---
+
+#### Restart Quiz
+
+**Endpoint**: `POST /api/idiom-game/restart`
 
 **Query Parameters**:
-- `playerId` (Long, required): Player ID
+- `playerId` (String, required): Player ID or username
 
 **Response**: `200 OK`
 ```json
@@ -393,17 +415,11 @@ Final Score = Base Score + Time Bonus - Hint Penalty
 
 #### Start Sentence Game
 
-**Endpoint**: `POST /api/games/sentence/start`
+**Endpoint**: `GET /api/sentence-game/start`
 
 **Query Parameters**:
-- `playerId` (Long, required): Player ID
-
-**Request Body**:
-```json
-{
-  "difficulty": "EASY | MEDIUM | HARD | EXPERT"
-}
-```
+- `difficulty` (String, required): EASY, MEDIUM, HARD, or EXPERT
+- `playerId` (String, optional): Player ID or username (auto-creates player if username provided)
 
 **Response**: `200 OK`
 ```json
@@ -432,15 +448,17 @@ Final Score = Base Score + Time Bonus - Hint Penalty
 
 #### Submit Sentence Answer
 
-**Endpoint**: `POST /api/games/sentence/submit`
+**Endpoint**: `POST /api/sentence-game/submit`
+
+**Query Parameters**:
+- `playerId` (String, optional): Player ID or username
 
 **Request Body**:
 ```json
 {
-  "playerId": 1,
-  "sessionId": "xyz789",
   "answer": "我今天去学校上课",
-  "timeTaken": 75
+  "timeTaken": 75,
+  "hintsUsed": 0
 }
 ```
 
@@ -470,11 +488,13 @@ Final Score = Base Score + Time Bonus - Hint Penalty
 
 #### Request Hint
 
-**Endpoint**: `POST /api/games/sentence/hint`
+**Endpoint**: `POST /api/sentence-game/hint/{level}`
+
+**Path Parameters**:
+- `level` (Integer): Hint level (1, 2, or 3)
 
 **Query Parameters**:
-- `playerId` (Long, required): Player ID
-- `sessionId` (String, required): Game session ID
+- `playerId` (String, optional): Player ID or username
 
 **Response**: `200 OK`
 ```json
@@ -488,12 +508,36 @@ Final Score = Base Score + Time Bonus - Hint Penalty
 
 ---
 
-#### Restart Sentence Game
+#### Get Player History
 
-**Endpoint**: `POST /api/games/sentence/restart`
+**Endpoint**: `GET /api/sentence-game/history/{playerId}`
+
+**Path Parameters**:
+- `playerId` (Long): Player ID
+
+**Response**: `200 OK`
+```json
+[
+  {
+    "sentenceId": 20,
+    "chineseText": "我今天去学校上课",
+    "score": 520,
+    "difficulty": "EASY",
+    "timeTaken": 75,
+    "hintsUsed": 0,
+    "completedAt": "2025-10-02T14:35:00"
+  }
+]
+```
+
+---
+
+#### Restart Quiz
+
+**Endpoint**: `POST /api/sentence-game/restart`
 
 **Query Parameters**:
-- `playerId` (Long, required): Player ID
+- `playerId` (String, required): Player ID or username
 
 **Response**: `200 OK`
 ```json
@@ -510,13 +554,11 @@ Final Score = Base Score + Time Bonus - Hint Penalty
 
 #### Get Top Players
 
-**Endpoint**: `GET /api/leaderboard/{gameType}/{difficulty}`
-
-**Path Parameters**:
-- `gameType` (String): `idiom` or `sentence`
-- `difficulty` (String): `EASY`, `MEDIUM`, `HARD`, `EXPERT`
+**Endpoint**: `GET /api/leaderboard/top`
 
 **Query Parameters**:
+- `gameType` (String, required): `IDIOM_GAME` or `SENTENCE_GAME`
+- `difficulty` (String, required): `EASY`, `MEDIUM`, `HARD`, `EXPERT`
 - `limit` (Integer, optional, default=10): Number of players to return
 
 **Response**: `200 OK`
@@ -552,13 +594,13 @@ Final Score = Base Score + Time Bonus - Hint Penalty
 
 #### Get Player Rank
 
-**Endpoint**: `GET /api/leaderboard/player/{playerId}`
+**Endpoint**: `GET /api/leaderboard/player/{playerIdOrUsername}`
 
 **Path Parameters**:
-- `playerId` (Long): Player ID
+- `playerIdOrUsername` (String): Player ID or username
 
 **Query Parameters**:
-- `gameType` (String, required): `idiom` or `sentence`
+- `gameType` (String, required): `IDIOM_GAME` or `SENTENCE_GAME`
 - `difficulty` (String, required): `EASY`, `MEDIUM`, `HARD`, `EXPERT`
 
 **Response**: `200 OK`
@@ -666,7 +708,7 @@ Final Score = Base Score + Time Bonus - Hint Penalty
 
 #### Get All Feature Flags
 
-**Endpoint**: `GET /api/feature-flags`
+**Endpoint**: `GET /api/feature-flags/all`
 
 **Response**: `200 OK`
 ```json
@@ -713,27 +755,64 @@ Final Score = Base Score + Time Bonus - Hint Penalty
 
 ---
 
-#### Toggle Feature Flag (Admin Only)
+#### Enable Feature Flag (Admin Only)
 
-**Endpoint**: `PUT /api/feature-flags/{flagName}`
+**Endpoint**: `POST /api/feature-flags/{key}/enable`
 
 **Path Parameters**:
-- `flagName` (String): Feature flag name
-
-**Request Body**:
-```json
-{
-  "enabled": false
-}
-```
+- `key` (String): Feature flag key
 
 **Response**: `200 OK`
 ```json
 {
-  "message": "Feature flag updated successfully",
-  "flagName": "HINT_SYSTEM_ENABLED",
-  "enabled": false
+  "success": true,
+  "message": "Feature flag enabled successfully",
+  "flag": {
+    "key": "ENABLE_HINTS",
+    "enabled": true
+  }
 }
+```
+
+---
+
+#### Disable Feature Flag (Admin Only)
+
+**Endpoint**: `POST /api/feature-flags/{key}/disable`
+
+**Path Parameters**:
+- `key` (String): Feature flag key
+
+**Response**: `200 OK`
+```json
+{
+  "success": true,
+  "message": "Feature flag disabled successfully",
+  "flag": {
+    "key": "ENABLE_HINTS",
+    "enabled": false
+  }
+}
+```
+
+---
+
+#### Get Active Feature Flags
+
+**Endpoint**: `GET /api/feature-flags/active`
+
+**Response**: `200 OK`
+```json
+[
+  {
+    "key": "ENABLE_IDIOM_SCRAMBLE",
+    "enabled": true
+  },
+  {
+    "key": "ENABLE_SENTENCE_CRAFTING",
+    "enabled": true
+  }
+]
 ```
 
 ---

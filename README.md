@@ -819,13 +819,21 @@ REACT_APP_ENV=production
 
 ## 📚 Additional Documentation
 
-| Document | Description |
-|----------|-------------|
-| [API Documentation](http://localhost:8080/swagger-ui.html) | Interactive API docs (Swagger) |
-| [Score Metrics](./SCORE_METRICS.md) | Complete scoring system documentation |
-| [Issue Tracking](./Issue.md) | Known issues, resolutions, and status |
-| [CLAUDE.md](./CLAUDE.md) | Development guidelines and principles |
-| [Test Coverage Report](./Issue.md#15-ensure-all-test-is-generated-and-overall-coverage-is-above-90) | Detailed test coverage metrics |
+### For Players
+- **[User Guide](./USER_GUIDE.md)** - Complete gameplay instructions, scoring, achievements
+
+### For Administrators
+- **[Admin Guide](./ADMIN_GUIDE.md)** - Question management, configuration, maintenance
+
+### For Developers
+- **[Developer Setup](./chinese-scramble-backend/DEVELOPER_SETUP.md)** - Technical setup, architecture
+- **[API Documentation](./chinese-scramble-backend/API_DOCUMENTATION.md)** - Complete API reference
+- **[Feature Flags Reference](./FEATURE_FLAGS_REFERENCE.md)** - All feature flags explained
+
+### Other Resources
+- **[Issue Tracking](./Issue.md)** - Known issues, resolutions, and status
+- **[CLAUDE.md](./CLAUDE.md)** - Development guidelines and principles
+- **[Swagger UI](http://localhost:8080/swagger-ui.html)** - Interactive API documentation (when backend running)
 
 ---
 
