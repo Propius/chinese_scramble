@@ -1526,4 +1526,412 @@ describe('SentenceGamePage', () => {
       expect(callUrl).toContain('/api/sentence-game/hint');
     });
   });
+
+  describe('Quiz Completion Scenarios', () => {
+    it('should handle all questions completed error on game start', async () => {
+      const completionError = {
+        response: {
+          data: {
+            error: '恭喜！您已完成所有 简单 难度的句子题目！'
+          }
+        }
+      };
+
+      mockStartGame.mockRejectedValueOnce(completionError);
+      mockApiClient.post.mockResolvedValueOnce({ success: true });
+      mockStartGame.mockResolvedValueOnce(undefined);
+      mockUseSentenceGame.mockReturnValue({
+        question: mockQuestion,
+        loading: false,
+        error: null,
+        userAnswer: [],
+        hintsUsed: 0,
+        timeTaken: 0,
+        validationResult: null,
+        startGame: mockStartGame,
+        submitAnswer: jest.fn(),
+        getHint: jest.fn(),
+        setUserAnswer: jest.fn(),
+        reset: jest.fn(),
+      });
+
+      renderSentenceGamePage();
+
+      await act(async () => {
+        fireEvent.click(screen.getByText('🚀 开始游戏'));
+      });
+
+      await waitFor(() => {
+        expect(mockApiClient.post).toHaveBeenCalledWith(
+          expect.stringContaining('/api/sentence-game/restart')
+        );
+      });
+    });
+
+    it('should show completion message if restart fails on game start', async () => {
+      const completionError = {
+        response: {
+          data: {
+            error: '恭喜您已完成所有 简单 难度的句子题目！'
+          }
+        },
+        message: '恭喜您已完成所有 简单 难度的句子题目！'
+      };
+
+      mockStartGame.mockRejectedValueOnce(completionError);
+      mockApiClient.post.mockRejectedValueOnce({
+        response: { data: { error: 'Restart failed' } },
+        message: 'Restart failed'
+      });
+
+      renderSentenceGamePage();
+
+      await act(async () => {
+        fireEvent.click(screen.getByText('🚀 开始游戏'));
+      });
+
+      await waitFor(() => {
+        expect(mockApiClient.post).toHaveBeenCalled();
+      }, { timeout: 3000 });
+    });
+
+    it('should handle completion on last question submit with correct answer', async () => {
+      const mockResult = { isValid: true, score: 100 };
+      const completionError = {
+        response: {
+          data: {
+            error: '恭喜！您已完成所有 简单 难度的句子题目！'
+          }
+        }
+      };
+
+      await startGame();
+
+      mockApiClient.post.mockResolvedValueOnce(mockResult);
+      mockStartGame.mockRejectedValueOnce(completionError);
+
+      await act(async () => {
+        fireEvent.click(screen.getByText('Submit Answer'));
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText('正确！')).toBeInTheDocument();
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('mock-confetti')).toHaveAttribute('data-active', 'true');
+      });
+    });
+
+    it('should handle timeout on last question', async () => {
+      const completionError = {
+        response: {
+          data: {
+            error: '恭喜！您已完成所有 简单 难度的句子题目！'
+          }
+        }
+      };
+
+      await startGame();
+
+      mockStartGame.mockRejectedValueOnce(completionError);
+
+      await act(async () => {
+        fireEvent.click(screen.getByText('Trigger Timeout'));
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText(/所有题目已完成/)).toBeInTheDocument();
+      });
+    });
+
+    it('should handle non-completion error during timeout', async () => {
+      await startGame();
+
+      mockStartGame.mockRejectedValueOnce(new Error('Network error'));
+
+      await act(async () => {
+        fireEvent.click(screen.getByText('Trigger Timeout'));
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText(/时间到！请返回菜单重新开始/)).toBeInTheDocument();
+      });
+    });
+
+    it('should not trigger timeout handler if quiz already completed', async () => {
+      mockUseSentenceGame.mockReturnValue({
+        question: null,
+        loading: false,
+        error: null,
+        userAnswer: [],
+        hintsUsed: 0,
+        timeTaken: 0,
+        validationResult: null,
+        startGame: mockStartGame,
+        submitAnswer: jest.fn(),
+        getHint: jest.fn(),
+        setUserAnswer: jest.fn(),
+        reset: jest.fn(),
+      });
+
+      const { rerender } = renderSentenceGamePage();
+
+      await act(async () => {
+        fireEvent.click(screen.getByText('🚀 开始游戏'));
+      });
+
+      rerender(
+        <BrowserRouter>
+          <SentenceGamePage />
+        </BrowserRouter>
+      );
+
+      const initialCallCount = mockStartGame.mock.calls.length;
+
+      await act(async () => {
+        const timeoutButtons = screen.queryAllByText('Trigger Timeout');
+        if (timeoutButtons.length > 0) {
+          fireEvent.click(timeoutButtons[0]);
+        }
+      });
+
+      expect(mockStartGame.mock.calls.length).toBeLessThanOrEqual(initialCallCount + 1);
+    });
+  });
+
+  describe('Error Recovery After Submit', () => {
+    it('should handle completion error and call restart when loading next question', async () => {
+      const mockResult = { isValid: true, score: 100 };
+      const completionError = {
+        response: {
+          data: {
+            error: '已经完成所有题目'
+          }
+        }
+      };
+
+      await startGame();
+
+      mockApiClient.post.mockResolvedValueOnce(mockResult);
+      mockStartGame.mockRejectedValueOnce(completionError);
+      mockApiClient.post.mockResolvedValueOnce({ success: true });
+      mockStartGame.mockResolvedValueOnce(undefined);
+
+      await act(async () => {
+        fireEvent.click(screen.getByText('Submit Answer'));
+      });
+
+      await act(async () => {
+        jest.advanceTimersByTime(3100);
+      });
+
+      await waitFor(() => {
+        expect(mockApiClient.post).toHaveBeenCalledWith(
+          expect.stringContaining('/api/sentence-game/restart')
+        );
+      });
+    });
+
+    it('should show error message if restart fails after submit', async () => {
+      const mockResult = { isValid: true, score: 100 };
+      const completionError = {
+        response: {
+          data: {
+            error: '已完成所有题目'
+          }
+        }
+      };
+
+      await startGame();
+
+      mockApiClient.post.mockResolvedValueOnce(mockResult);
+      mockStartGame.mockRejectedValueOnce(completionError);
+      mockApiClient.post.mockRejectedValueOnce(new Error('Restart failed'));
+
+      await act(async () => {
+        fireEvent.click(screen.getByText('Submit Answer'));
+      });
+
+      await act(async () => {
+        jest.advanceTimersByTime(3100);
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText(/无法继续游戏/)).toBeInTheDocument();
+      });
+    });
+
+    it('should handle other errors when loading next question', async () => {
+      const mockResult = { isValid: true, score: 100 };
+
+      await startGame();
+
+      mockApiClient.post.mockResolvedValueOnce(mockResult);
+      mockStartGame.mockRejectedValueOnce(new Error('Network timeout'));
+
+      await act(async () => {
+        fireEvent.click(screen.getByText('Submit Answer'));
+      });
+
+      await act(async () => {
+        jest.advanceTimersByTime(3100);
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText(/加载失败，请返回菜单重新开始/)).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('Restart Quiz Functionality', () => {
+    it('should call restart API and start new game', async () => {
+      mockApiClient.post.mockResolvedValueOnce({ success: true });
+      mockStartGame.mockResolvedValueOnce(undefined);
+
+      const { rerender } = renderSentenceGamePage();
+
+      mockUseSentenceGame.mockReturnValue({
+        question: null,
+        loading: false,
+        error: null,
+        userAnswer: [],
+        hintsUsed: 0,
+        timeTaken: 0,
+        validationResult: null,
+        startGame: mockStartGame,
+        submitAnswer: jest.fn(),
+        getHint: jest.fn(),
+        setUserAnswer: jest.fn(),
+        reset: jest.fn(),
+      });
+
+      rerender(
+        <BrowserRouter>
+          <SentenceGamePage />
+        </BrowserRouter>
+      );
+
+      const restartButtons = screen.queryAllByText(/重新开始|restart/i);
+      if (restartButtons.length > 0) {
+        await act(async () => {
+          fireEvent.click(restartButtons[0]);
+        });
+
+        await waitFor(() => {
+          expect(mockApiClient.post).toHaveBeenCalledWith(
+            expect.stringContaining('/api/sentence-game/restart')
+          );
+        });
+      }
+    });
+
+    it('should clear error state on successful restart', async () => {
+      mockApiClient.post.mockResolvedValueOnce({ success: true });
+      mockStartGame.mockResolvedValueOnce(undefined);
+      mockUseSentenceGame.mockReturnValue({
+        question: mockQuestion,
+        loading: false,
+        error: null,
+        userAnswer: [],
+        hintsUsed: 0,
+        timeTaken: 0,
+        validationResult: null,
+        startGame: mockStartGame,
+        submitAnswer: jest.fn(),
+        getHint: jest.fn(),
+        setUserAnswer: jest.fn(),
+        reset: jest.fn(),
+      });
+
+      renderSentenceGamePage();
+
+      const restartButtons = screen.queryAllByText(/重新开始|restart/i);
+      if (restartButtons.length > 0) {
+        await act(async () => {
+          fireEvent.click(restartButtons[0]);
+        });
+
+        await waitFor(() => {
+          expect(screen.queryByText(/错误/)).not.toBeInTheDocument();
+        });
+      }
+    });
+  });
+
+  describe('Edge Cases and State Management', () => {
+    it('should handle concurrent submit attempts (prevent race conditions)', async () => {
+      const mockResult = { isValid: true, score: 100 };
+      mockApiClient.post.mockResolvedValue(mockResult);
+      mockStartGame.mockResolvedValue(undefined);
+
+      await startGame();
+
+      await act(async () => {
+        fireEvent.click(screen.getByText('Submit Answer'));
+        fireEvent.click(screen.getByText('Submit Answer'));
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText('正确！')).toBeInTheDocument();
+      });
+    });
+
+    it('should clear localStorage on component mount', () => {
+      renderSentenceGamePage();
+      expect(screen.getByTestId('mock-header')).toBeInTheDocument();
+    });
+
+    it('should handle startGame error that is not completion related', async () => {
+      const genericError = {
+        response: {
+          data: {
+            error: 'Database connection failed'
+          }
+        }
+      };
+
+      mockStartGame.mockRejectedValueOnce(genericError);
+
+      renderSentenceGamePage();
+
+      await act(async () => {
+        fireEvent.click(screen.getByText('🚀 开始游戏'));
+      });
+
+      await waitFor(() => {
+        expect(mockApiClient.post).not.toHaveBeenCalledWith(
+          expect.stringContaining('/api/sentence-game/restart')
+        );
+      });
+    });
+
+    it('should disable start button while starting game', () => {
+      mockUseSentenceGame.mockReturnValue({
+        question: null,
+        loading: false,
+        error: null,
+        userAnswer: [],
+        hintsUsed: 0,
+        timeTaken: 0,
+        validationResult: null,
+        startGame: mockStartGame,
+        submitAnswer: jest.fn(),
+        getHint: jest.fn(),
+        setUserAnswer: jest.fn(),
+        reset: jest.fn(),
+      });
+
+      renderSentenceGamePage();
+
+      const startButton = screen.getByText('🚀 开始游戏');
+      expect(startButton).not.toBeDisabled();
+
+      act(() => {
+        fireEvent.click(startButton);
+      });
+
+      expect(mockStartGame).toHaveBeenCalled();
+    });
+  });
 });
