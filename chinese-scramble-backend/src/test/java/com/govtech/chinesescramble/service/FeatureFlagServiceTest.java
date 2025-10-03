@@ -247,6 +247,319 @@ class FeatureFlagServiceTest {
         verify(featureFlagRepository).delete(flag);
     }
 
+    @Test
+    void testEnableFeature_AlreadyEnabled() {
+        // Given: Feature is already enabled
+        String featureName = "already_enabled";
+        FeatureFlag flag = createFeatureFlag(featureName, "Already enabled", true);
+
+        when(featureFlagRepository.findByFeatureName(featureName))
+            .thenReturn(Optional.of(flag));
+
+        // When
+        FeatureFlag result = featureFlagService.enableFeature(featureName);
+
+        // Then: Should return the flag without saving again
+        assertThat(result.getEnabled()).isTrue();
+        verify(featureFlagRepository, never()).save(any(FeatureFlag.class));
+    }
+
+    @Test
+    void testDisableFeature_AlreadyDisabled() {
+        // Given: Feature is already disabled
+        String featureName = "already_disabled";
+        FeatureFlag flag = createFeatureFlag(featureName, "Already disabled", false);
+
+        when(featureFlagRepository.findByFeatureName(featureName))
+            .thenReturn(Optional.of(flag));
+
+        // When
+        FeatureFlag result = featureFlagService.disableFeature(featureName);
+
+        // Then: Should return the flag without saving again
+        assertThat(result.getEnabled()).isFalse();
+        verify(featureFlagRepository, never()).save(any(FeatureFlag.class));
+    }
+
+    @Test
+    void testToggleFeature_FromEnabledToDisabled() {
+        // Given
+        String featureName = "toggle_feature";
+        FeatureFlag flag = createFeatureFlag(featureName, "Toggle test", true);
+
+        when(featureFlagRepository.findByFeatureName(featureName))
+            .thenReturn(Optional.of(flag));
+        when(featureFlagRepository.save(any(FeatureFlag.class)))
+            .thenAnswer(invocation -> invocation.getArgument(0));
+
+        // When
+        FeatureFlag result = featureFlagService.toggleFeature(featureName);
+
+        // Then
+        verify(featureFlagRepository).save(any(FeatureFlag.class));
+    }
+
+    @Test
+    void testToggleFeature_NotFound() {
+        // Given
+        String featureName = "nonexistent";
+
+        when(featureFlagRepository.findByFeatureName(featureName))
+            .thenReturn(Optional.empty());
+
+        // When/Then
+        assertThatThrownBy(() -> featureFlagService.toggleFeature(featureName))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Feature flag not found");
+    }
+
+    @Test
+    void testUpdateFeatureDescription() {
+        // Given
+        String featureName = "update_desc_feature";
+        String newDescription = "Updated description";
+        FeatureFlag flag = createFeatureFlag(featureName, "Old description", true);
+
+        when(featureFlagRepository.findByFeatureName(featureName))
+            .thenReturn(Optional.of(flag));
+        when(featureFlagRepository.save(any(FeatureFlag.class)))
+            .thenAnswer(invocation -> invocation.getArgument(0));
+
+        // When
+        FeatureFlag result = featureFlagService.updateFeatureDescription(featureName, newDescription);
+
+        // Then
+        assertThat(result.getDescription()).isEqualTo(newDescription);
+        verify(featureFlagRepository).save(any(FeatureFlag.class));
+    }
+
+    @Test
+    void testUpdateFeatureDescription_NotFound() {
+        // Given
+        String featureName = "nonexistent";
+
+        when(featureFlagRepository.findByFeatureName(featureName))
+            .thenReturn(Optional.empty());
+
+        // When/Then
+        assertThatThrownBy(() -> featureFlagService.updateFeatureDescription(featureName, "new desc"))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Feature flag not found");
+    }
+
+    @Test
+    void testGetFeatureFlag() {
+        // Given
+        String featureName = "test_feature";
+        FeatureFlag flag = createFeatureFlag(featureName, "Test", true);
+
+        when(featureFlagRepository.findByFeatureName(featureName))
+            .thenReturn(Optional.of(flag));
+
+        // When
+        Optional<FeatureFlag> result = featureFlagService.getFeatureFlag(featureName);
+
+        // Then
+        assertThat(result).isPresent();
+        assertThat(result.get().getFeatureName()).isEqualTo(featureName);
+    }
+
+    @Test
+    void testGetAllFeatureFlags() {
+        // Given
+        List<FeatureFlag> flags = List.of(
+            createFeatureFlag("feature1", "Feature 1", true),
+            createFeatureFlag("feature2", "Feature 2", false)
+        );
+
+        when(featureFlagRepository.findAllOrderedByName()).thenReturn(flags);
+
+        // When
+        List<FeatureFlag> result = featureFlagService.getAllFeatureFlags();
+
+        // Then
+        assertThat(result).hasSize(2);
+        verify(featureFlagRepository).findAllOrderedByName();
+    }
+
+    @Test
+    void testGetDisabledFeatures() {
+        // Given
+        List<FeatureFlag> disabledFlags = List.of(
+            createFeatureFlag("feature1", "Feature 1", false),
+            createFeatureFlag("feature2", "Feature 2", false)
+        );
+
+        when(featureFlagRepository.findByEnabledFalse())
+            .thenReturn(disabledFlags);
+
+        // When
+        List<FeatureFlag> result = featureFlagService.getDisabledFeatures();
+
+        // Then
+        assertThat(result).hasSize(2);
+        assertThat(result).allMatch(f -> !f.getEnabled());
+    }
+
+    @Test
+    void testGetRecentlyEnabledFeatures() {
+        // Given
+        List<FeatureFlag> recentlyEnabled = List.of(
+            createFeatureFlag("feature1", "Recent 1", true)
+        );
+
+        when(featureFlagRepository.findRecentlyEnabledFeatures(any(LocalDateTime.class)))
+            .thenReturn(recentlyEnabled);
+
+        // When
+        List<FeatureFlag> result = featureFlagService.getRecentlyEnabledFeatures();
+
+        // Then
+        assertThat(result).hasSize(1);
+        verify(featureFlagRepository).findRecentlyEnabledFeatures(any(LocalDateTime.class));
+    }
+
+    @Test
+    void testGetRecentlyDisabledFeatures() {
+        // Given
+        List<FeatureFlag> recentlyDisabled = List.of(
+            createFeatureFlag("feature1", "Recent 1", false)
+        );
+
+        when(featureFlagRepository.findRecentlyDisabledFeatures(any(LocalDateTime.class)))
+            .thenReturn(recentlyDisabled);
+
+        // When
+        List<FeatureFlag> result = featureFlagService.getRecentlyDisabledFeatures();
+
+        // Then
+        assertThat(result).hasSize(1);
+        verify(featureFlagRepository).findRecentlyDisabledFeatures(any(LocalDateTime.class));
+    }
+
+    @Test
+    void testSearchFeatures() {
+        // Given
+        String searchTerm = "game";
+        List<FeatureFlag> searchResults = List.of(
+            createFeatureFlag("idiom-game", "Idiom game feature", true),
+            createFeatureFlag("sentence-game", "Sentence game feature", true)
+        );
+
+        when(featureFlagRepository.searchFeatures(searchTerm))
+            .thenReturn(searchResults);
+
+        // When
+        List<FeatureFlag> result = featureFlagService.searchFeatures(searchTerm);
+
+        // Then
+        assertThat(result).hasSize(2);
+        verify(featureFlagRepository).searchFeatures(searchTerm);
+    }
+
+    @Test
+    void testFeatureFlagExists_True() {
+        // Given
+        String featureName = "existing_feature";
+
+        when(featureFlagRepository.existsByFeatureName(featureName))
+            .thenReturn(true);
+
+        // When
+        boolean exists = featureFlagService.featureFlagExists(featureName);
+
+        // Then
+        assertThat(exists).isTrue();
+        verify(featureFlagRepository).existsByFeatureName(featureName);
+    }
+
+    @Test
+    void testFeatureFlagExists_False() {
+        // Given
+        String featureName = "nonexistent_feature";
+
+        when(featureFlagRepository.existsByFeatureName(featureName))
+            .thenReturn(false);
+
+        // When
+        boolean exists = featureFlagService.featureFlagExists(featureName);
+
+        // Then
+        assertThat(exists).isFalse();
+        verify(featureFlagRepository).existsByFeatureName(featureName);
+    }
+
+    @Test
+    void testDeleteFeatureFlag_NotFound() {
+        // Given
+        String featureName = "nonexistent";
+
+        when(featureFlagRepository.findByFeatureName(featureName))
+            .thenReturn(Optional.empty());
+
+        // When/Then
+        assertThatThrownBy(() -> featureFlagService.deleteFeatureFlag(featureName))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Feature flag not found");
+    }
+
+    @Test
+    void testGetStatistics() {
+        // Given
+        when(featureFlagRepository.count()).thenReturn(10L);
+        when(featureFlagRepository.countByEnabledTrue()).thenReturn(7L);
+        when(featureFlagRepository.countByEnabledFalse()).thenReturn(3L);
+
+        // When
+        FeatureFlagService.FeatureFlagStatistics stats = featureFlagService.getStatistics();
+
+        // Then
+        assertThat(stats.totalFlags()).isEqualTo(10L);
+        assertThat(stats.enabledCount()).isEqualTo(7L);
+        assertThat(stats.disabledCount()).isEqualTo(3L);
+        assertThat(stats.enabledPercentage()).isEqualTo(70.0);
+        assertThat(stats.disabledPercentage()).isEqualTo(30.0);
+    }
+
+    @Test
+    void testGetStatistics_Empty() {
+        // Given
+        when(featureFlagRepository.count()).thenReturn(0L);
+        when(featureFlagRepository.countByEnabledTrue()).thenReturn(0L);
+        when(featureFlagRepository.countByEnabledFalse()).thenReturn(0L);
+
+        // When
+        FeatureFlagService.FeatureFlagStatistics stats = featureFlagService.getStatistics();
+
+        // Then
+        assertThat(stats.totalFlags()).isEqualTo(0L);
+        assertThat(stats.enabledPercentage()).isEqualTo(0.0);
+        assertThat(stats.disabledPercentage()).isEqualTo(0.0);
+    }
+
+    @Test
+    void testClearAllCaches() {
+        // When
+        featureFlagService.clearAllCaches();
+
+        // Then: Just verifies the method executes without error
+        // Cache eviction is handled by Spring annotations
+    }
+
+    @Test
+    void testDisableFeature_NotFound() {
+        // Given
+        String featureName = "nonexistent";
+
+        when(featureFlagRepository.findByFeatureName(featureName))
+            .thenReturn(Optional.empty());
+
+        // When/Then
+        assertThatThrownBy(() -> featureFlagService.disableFeature(featureName))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Feature flag not found");
+    }
+
     // Helper method
 
     private FeatureFlag createFeatureFlag(String featureName, String description,
