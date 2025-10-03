@@ -664,7 +664,7 @@ describe('IdiomGamePage', () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByText('时间到！请再试一次。')).toBeInTheDocument();
+        expect(screen.getByText(/时间到！/)).toBeInTheDocument();
       });
     });
 

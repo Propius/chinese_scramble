@@ -27,8 +27,10 @@ export const useSentenceGame = () => {
   });
 
   const startGame = useCallback(async (difficulty: Difficulty) => {
-    setState(prev => ({ ...prev, loading: true, error: null }));
     try {
+      // OPTIMIZATION: Prepare all data BEFORE setting loading state
+      // This reduces visible state changes and prevents button flickering
+
       // Always send playerId for leaderboard tracking
       const playerId = usernameUtils.getUsername() || undefined;
 
@@ -45,6 +47,9 @@ export const useSentenceGame = () => {
         // Clear localStorage when feature is OFF to prevent stale data issues
         questionTracker.resetSeenQuestions('SENTENCE', difficulty);
       }
+
+      // NOW set loading state only once, right before API call
+      setState(prev => ({ ...prev, loading: true, error: null }));
 
       const question = await sentenceService.startGame(difficulty, playerId, excludedIds);
 

@@ -35,6 +35,7 @@ export const IdiomGamePage: React.FC = () => {
   const [showConfetti, setShowConfetti] = useState(false);
   const [quizCompleted, setQuizCompleted] = useState(false);
   const isLoadingNextQuestion = useRef(false);
+  const [isStarting, setIsStarting] = useState(false); // Local loading state to prevent flickering
 
   // Reset completion state and clear stale localStorage when component mounts
   useEffect(() => {
@@ -54,12 +55,14 @@ export const IdiomGamePage: React.FC = () => {
   }, [hookError, quizCompleted]);
 
   const handleStart = async () => {
+    setIsStarting(true); // Lock button immediately
     try {
       await startGame(difficulty);
       setGameStarted(true);
       setGameResult(null);
       setHint('');
       setQuizCompleted(false);
+      setIsStarting(false); // Release after successful start
     } catch (err: any) {
       // Check if quiz is completed
       const errorData = err.response?.data;
@@ -91,6 +94,7 @@ export const IdiomGamePage: React.FC = () => {
           setGameResult(null);
           setHint('');
           setQuizCompleted(false);
+          setIsStarting(false); // Release after successful restart
         } catch (retryErr: any) {
           console.error('[IdiomGamePage] Restart failed:', retryErr);
           // If restart also fails, show completion message
@@ -101,7 +105,11 @@ export const IdiomGamePage: React.FC = () => {
             feedback: `无法重新开始: ${retryErr.response?.data?.error || retryErr.message || '请手动刷新页面'}`,
             allQuestionsCompleted: true,
           });
+          setIsStarting(false); // Release even on error
         }
+      } else {
+        // Not a completion error, just release the button
+        setIsStarting(false);
       }
     }
   };
@@ -486,13 +494,13 @@ export const IdiomGamePage: React.FC = () => {
 
               <button
                 onClick={handleStart}
-                disabled={loading}
+                disabled={isStarting || loading}
                 className="btn btn-success w-100 py-3 fw-bold"
                 style={{
                   fontSize: '1.1rem',
                 }}
               >
-                {loading ? '加载中...' : '🚀 开始游戏'}
+                {(isStarting || loading) ? '加载中...' : '🚀 开始游戏'}
               </button>
             </div>
           </div>

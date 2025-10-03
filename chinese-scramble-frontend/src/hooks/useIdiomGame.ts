@@ -27,8 +27,10 @@ export const useIdiomGame = () => {
   });
 
   const startGame = useCallback(async (difficulty: Difficulty) => {
-    setState(prev => ({ ...prev, loading: true, error: null }));
     try {
+      // OPTIMIZATION: Prepare all data BEFORE setting loading state
+      // This reduces visible state changes and prevents button flickering
+
       // Always send playerId for leaderboard tracking
       const playerId = usernameUtils.getUsername() || undefined;
 
@@ -41,6 +43,9 @@ export const useIdiomGame = () => {
       } else {
         questionTracker.resetSeenQuestions('IDIOM', difficulty);
       }
+
+      // NOW set loading state only once, right before API call
+      setState(prev => ({ ...prev, loading: true, error: null }));
 
       const question = await idiomService.startGame(difficulty, playerId, excludedIds);
 
