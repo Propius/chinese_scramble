@@ -65,7 +65,7 @@ public class Achievement extends BaseEntity {
      * Displayed to the player when unlocked
      * Example: "速度之王" (Speed King), "完美主义者" (Perfectionist)
      */
-    @Column(nullable = false, length = 100, columnDefinition = "VARCHAR(100) CHARACTER SET utf8mb4")
+    @Column(nullable = false, length = 100)
     private String title;
 
     /**
@@ -73,7 +73,7 @@ public class Achievement extends BaseEntity {
      * Explains what the player did to earn this
      * Example: "在30秒内完成一个成语游戏" (Complete an idiom game in under 30 seconds)
      */
-    @Column(nullable = false, length = 255, columnDefinition = "VARCHAR(255) CHARACTER SET utf8mb4")
+    @Column(nullable = false, length = 255)
     private String description;
 
     /**

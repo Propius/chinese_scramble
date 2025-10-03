@@ -63,7 +63,8 @@ export const sentenceService = {
       params.append('excludedIds', excludedIds!.join(','));
     }
 
-    return apiClient.get<SentenceQuestion>(`/api/sentence-game/start?${params.toString()}`);
+    const response = await apiClient.get<SentenceQuestion>(`/api/sentence-game/start?${params.toString()}`);
+    return response;
   },
 
   async validateAnswer(request: SentenceValidationRequest, playerId?: string): Promise<SentenceValidationResponse> {

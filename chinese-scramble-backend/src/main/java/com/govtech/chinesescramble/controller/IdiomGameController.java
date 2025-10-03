@@ -43,9 +43,9 @@ public class IdiomGameController {
         @RequestParam String difficulty,
         @RequestParam(required = false) String playerId
     ) {
+        // Resolve player ID from playerId parameter or use default
+        Long playerIdLong = 1L;
         try {
-            // Resolve player ID from playerId parameter or use default
-            Long playerIdLong = 1L;
             if (playerId != null && !playerId.isEmpty()) {
                 try {
                     playerIdLong = Long.parseLong(playerId);
@@ -75,12 +75,15 @@ public class IdiomGameController {
                 }
             }
 
-            var difficultyLevel = com.govtech.chinesescramble.entity.enums.DifficultyLevel.valueOf(difficulty.toUpperCase());
-            var gameState = idiomGameService.startGame(playerIdLong, difficultyLevel);
+            log.info("Starting idiom game for player {} with difficulty {}", playerIdLong, difficulty);
+            var gameState = idiomGameService.startGame(playerIdLong, com.govtech.chinesescramble.entity.enums.DifficultyLevel.valueOf(difficulty.toUpperCase()));
             return ResponseEntity.ok(gameState);
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid request for idiom game", e);
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             log.error("Failed to start idiom game", e);
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
         }
     }
 

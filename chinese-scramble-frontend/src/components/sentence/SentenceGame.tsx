@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import WordTile from './WordTile';
@@ -44,6 +44,13 @@ export const SentenceGame: React.FC<SentenceGameProps> = ({
   const [selectedTileIndex, setSelectedTileIndex] = useState<number | null>(null);
   const [selectedTileType, setSelectedTileType] = useState<'placed' | null>(null);
 
+  // Use ref to store latest onTimeout callback to avoid dependency issues
+  const onTimeoutRef = useRef(onTimeout);
+
+  useEffect(() => {
+    onTimeoutRef.current = onTimeout;
+  }, [onTimeout]);
+
   // Reset all state when new question arrives
   useEffect(() => {
     setAvailableWords(scrambledWords);
@@ -56,20 +63,19 @@ export const SentenceGame: React.FC<SentenceGameProps> = ({
     setShowTranslation(false);
   }, [scrambledWords, timeLimit]);
 
-  // Timer countdown
+  // Timer countdown - using ref to avoid onTimeout dependency
   useEffect(() => {
     if (timeLeft <= 0) {
-      soundManager.playTimeout();
-      onTimeout();
+      // Don't play sound here - parent will play it
+      onTimeoutRef.current();
       return;
     }
 
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
-          clearInterval(timer);
-          soundManager.playTimeout();
-          onTimeout();
+          // Don't play sound here - parent will play it
+          onTimeoutRef.current();
           return 0;
         }
         return prev - 1;
@@ -77,7 +83,7 @@ export const SentenceGame: React.FC<SentenceGameProps> = ({
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [timeLeft, onTimeout]);
+  }, [timeLeft]);
 
   const handleDrop = (word: string, fromIndex: number, toIndex: number, fromPlaced: boolean) => {
     if (fromPlaced) {

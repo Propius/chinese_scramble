@@ -63,7 +63,8 @@ export const idiomService = {
       params.append('excludedIds', excludedIds!.join(','));
     }
 
-    return apiClient.get<IdiomQuestion>(`/api/idiom-game/start?${params.toString()}`);
+    const response = await apiClient.get<IdiomQuestion>(`/api/idiom-game/start?${params.toString()}`);
+    return response;
   },
 
   async validateAnswer(request: IdiomValidationRequest, playerId?: string): Promise<IdiomValidationResponse> {

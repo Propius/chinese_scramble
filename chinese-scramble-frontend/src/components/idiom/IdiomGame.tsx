@@ -53,7 +53,7 @@ export const IdiomGame: React.FC<IdiomGameProps> = ({
   // Timer countdown
   useEffect(() => {
     if (timeLeft <= 0) {
-      soundManager.playTimeout();
+      // Don't play sound here - parent will play it
       onTimeout();
       return;
     }
@@ -62,7 +62,7 @@ export const IdiomGame: React.FC<IdiomGameProps> = ({
       setTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(timer);
-          soundManager.playTimeout();
+          // Don't play sound here - parent will play it
           onTimeout();
           return 0;
         }

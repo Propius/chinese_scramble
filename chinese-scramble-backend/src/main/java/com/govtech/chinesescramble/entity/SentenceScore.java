@@ -60,7 +60,7 @@ public class SentenceScore extends BaseEntity {
      * Example: "他昨天去图书馆借书了" (He went to the library to borrow books yesterday)
      * Length: up to 100 characters for complex sentences
      */
-    @Column(nullable = false, length = 100, columnDefinition = "VARCHAR(100) CHARACTER SET utf8mb4", name = "target_sentence")
+    @Column(nullable = false, length = 100, name = "target_sentence")
     private String targetSentence;
 
     /**
@@ -71,7 +71,7 @@ public class SentenceScore extends BaseEntity {
      * - Grammar structure
      * Example: "昨天他去图书馆借书了" (word order variation)
      */
-    @Column(nullable = false, length = 100, columnDefinition = "VARCHAR(100) CHARACTER SET utf8mb4", name = "player_sentence")
+    @Column(nullable = false, length = 100, name = "player_sentence")
     private String playerSentence;
 
     /**

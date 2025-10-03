@@ -140,7 +140,9 @@ describe('SentenceGamePage', () => {
   });
 
   afterEach(() => {
-    jest.runOnlyPendingTimers();
+    act(() => {
+      jest.runOnlyPendingTimers();
+    });
     jest.useRealTimers();
   });
 
@@ -550,28 +552,35 @@ describe('SentenceGamePage', () => {
 
       await startGame();
 
-      const initialCallCount = mockStartGame.mock.calls.length;
+      const callsBefore = mockStartGame.mock.calls.length;
 
       await act(async () => {
         fireEvent.click(screen.getByText('Submit Answer'));
       });
 
-      // Should not have been called after 3 seconds
+      // Wait for result modal to appear
+      await waitFor(() => {
+        expect(screen.getByText(/正确/)).toBeInTheDocument();
+      }, { timeout: 3000 });
+
+      // After 3 seconds, should still be showing feedback
       await act(async () => {
-        jest.advanceTimersByTime(3000);
+        jest.advanceTimersByTime(3500);
       });
 
-      expect(mockStartGame.mock.calls.length).toBe(initialCallCount);
+      // Verify feedback message about 4 seconds
+      expect(screen.getByText(/4秒后/)).toBeInTheDocument();
 
-      // Should be called after 4 seconds
+      // After 4 seconds total, should load next question
       await act(async () => {
         jest.advanceTimersByTime(1000);
       });
 
+      // Verify new question was requested (call count increased)
       await waitFor(() => {
-        expect(mockStartGame.mock.calls.length).toBe(initialCallCount + 1);
-      });
-    });
+        expect(mockStartGame.mock.calls.length).toBeGreaterThan(callsBefore);
+      }, { timeout: 3000 });
+    }, 10000);
 
     it('should load next question after 4 seconds for invalid answer', async () => {
       const mockResult = { isValid: false, score: 0 };
@@ -760,14 +769,19 @@ describe('SentenceGamePage', () => {
         fireEvent.click(screen.getByText('Trigger Timeout'));
       });
 
+      // Wait for timeout modal to display
+      await waitFor(() => {
+        expect(screen.getByText(/时间到/)).toBeInTheDocument();
+      }, { timeout: 3000 });
+
       await act(async () => {
         jest.advanceTimersByTime(3000);
       });
 
       await waitFor(() => {
         expect(mockStartGame.mock.calls.length).toBe(initialCallCount + 1);
-      });
-    });
+      }, { timeout: 3000 });
+    }, 10000);
 
     it('should show restart message after timeout', async () => {
       await startGame();

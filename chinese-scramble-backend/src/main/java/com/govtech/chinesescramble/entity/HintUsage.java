@@ -92,7 +92,7 @@ public class HintUsage extends BaseEntity {
      * - "First word: 我" (Level 1 sentence hint)
      * - "Structure: Subject + Verb + Object" (Level 2 sentence hint)
      */
-    @Column(length = 255, columnDefinition = "VARCHAR(255) CHARACTER SET utf8mb4", name = "hint_content")
+    @Column(length = 255, name = "hint_content")
     private String hintContent;
 
     /**

@@ -50,7 +50,8 @@ class IdiomScoreRepositoryTest {
         entityManager.flush();
         entityManager.clear();
 
-        // Create test player
+        // Create test player with explicit timestamps
+        LocalDateTime now = LocalDateTime.now();
         testPlayer = Player.builder()
             .username("玩家001")
             .email("player@test.com")
@@ -58,9 +59,11 @@ class IdiomScoreRepositoryTest {
             .role(UserRole.PLAYER)
             .active(true)
             .build();
+        testPlayer.setCreatedAt(now.minusDays(7));
+        testPlayer.setUpdatedAt(now);
         entityManager.persist(testPlayer);
 
-        // Create test scores
+        // Create test scores with explicit timestamps
         score1 = IdiomScore.builder()
             .player(testPlayer)
             .idiom("一马当先")
@@ -71,6 +74,8 @@ class IdiomScoreRepositoryTest {
             .accuracyRate(1.0)
             .completed(true)
             .build();
+        score1.setCreatedAt(now.minusHours(3));
+        score1.setUpdatedAt(now.minusHours(3));
 
         score2 = IdiomScore.builder()
             .player(testPlayer)
@@ -82,6 +87,8 @@ class IdiomScoreRepositoryTest {
             .accuracyRate(0.92)
             .completed(true)
             .build();
+        score2.setCreatedAt(now.minusHours(2));
+        score2.setUpdatedAt(now.minusHours(2));
 
         score3 = IdiomScore.builder()
             .player(testPlayer)
@@ -93,6 +100,8 @@ class IdiomScoreRepositoryTest {
             .accuracyRate(1.0)
             .completed(true)
             .build();
+        score3.setCreatedAt(now.minusHours(1));
+        score3.setUpdatedAt(now.minusHours(1));
 
         entityManager.persist(score1);
         entityManager.persist(score2);
@@ -241,7 +250,8 @@ class IdiomScoreRepositoryTest {
             .findScoresInDateRange(testPlayer.getId(), start, end);
 
         // Then
-        assertThat(scoresInRange).hasSize(2); // score2 and score3
+        // All 3 scores (score1=-3h, score2=-2h, score3=-1h) are within last 6 hours
+        assertThat(scoresInRange).hasSize(3);
     }
 
     @Test
@@ -275,6 +285,7 @@ class IdiomScoreRepositoryTest {
     @DisplayName("Should save idiom score with Chinese characters")
     void testSaveIdiomScoreWithChineseCharacters() {
         // Given
+        LocalDateTime now = LocalDateTime.now();
         IdiomScore newScore = IdiomScore.builder()
             .player(testPlayer)
             .idiom("守株待兔")
@@ -285,6 +296,8 @@ class IdiomScoreRepositoryTest {
             .accuracyRate(0.95)
             .completed(true)
             .build();
+        newScore.setCreatedAt(now);
+        newScore.setUpdatedAt(now);
 
         // When
         IdiomScore saved = idiomScoreRepository.save(newScore);
@@ -312,9 +325,9 @@ class IdiomScoreRepositoryTest {
             .completed(true)
             .build();
 
-        // When/Then
-        entityManager.persist(invalidScore);
-        org.junit.jupiter.api.Assertions.assertThrows(Exception.class, () -> {
+        // When/Then - @PrePersist validation throws during persist()
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            entityManager.persist(invalidScore);
             entityManager.flush();
         });
     }
@@ -334,9 +347,9 @@ class IdiomScoreRepositoryTest {
             .completed(true)
             .build();
 
-        // When/Then
-        entityManager.persist(invalidScore);
-        org.junit.jupiter.api.Assertions.assertThrows(Exception.class, () -> {
+        // When/Then - @PrePersist validation throws during persist()
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            entityManager.persist(invalidScore);
             entityManager.flush();
         });
     }
@@ -346,9 +359,11 @@ class IdiomScoreRepositoryTest {
     void testCascadeDelete() {
         // Given
         Long scoreId = score1.getId();
+        Long playerId = testPlayer.getId();
 
-        // When
-        playerRepository.delete(testPlayer);
+        // When - Fetch player from repository to ensure managed entity with proper cascade
+        Player playerToDelete = playerRepository.findById(playerId).orElseThrow();
+        playerRepository.delete(playerToDelete);
         entityManager.flush();
         entityManager.clear();
 

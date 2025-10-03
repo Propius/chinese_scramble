@@ -65,14 +65,18 @@ public class PlayerController {
     @GetMapping("/{id}")
     public ResponseEntity<?> getPlayer(@PathVariable Long id) {
         return playerService.getPlayerById(id)
-            .map(player -> ResponseEntity.ok(Map.of(
-                "id", player.getId(),
-                "username", player.getUsername(),
-                "email", player.getEmail(),
-                "role", player.getRole().name(),
-                "active", player.isActive(),
-                "lastLogin", player.getLastLogin() != null ? player.getLastLogin().toString() : null
-            )))
+            .map(player -> {
+                var response = new java.util.HashMap<String, Object>();
+                response.put("id", player.getId());
+                response.put("username", player.getUsername());
+                response.put("email", player.getEmail());
+                response.put("role", player.getRole().name());
+                response.put("active", player.isActive());
+                if (player.getLastLogin() != null) {
+                    response.put("lastLogin", player.getLastLogin().toString());
+                }
+                return ResponseEntity.ok(response);
+            })
             .orElse(ResponseEntity.notFound().build());
     }
 

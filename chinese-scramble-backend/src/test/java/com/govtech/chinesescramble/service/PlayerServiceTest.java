@@ -115,7 +115,7 @@ class PlayerServiceTest {
         assertThatThrownBy(() ->
             playerService.registerPlayer(username, email, password))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("Email already exists");
+            .hasMessageContaining("Email already registered");
 
         verify(playerRepository, never()).save(any(Player.class));
     }

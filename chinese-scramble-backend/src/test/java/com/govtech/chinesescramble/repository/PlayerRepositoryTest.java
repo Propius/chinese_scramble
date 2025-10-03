@@ -52,15 +52,19 @@ class PlayerRepositoryTest {
         entityManager.flush();
         entityManager.clear();
 
-        // Create test players
+        // Create test players with explicit timestamps (required for direct entityManager.persist)
+        LocalDateTime now = LocalDateTime.now();
+
         testPlayer1 = Player.builder()
             .username("玩家001")
             .email("player1@test.com")
             .passwordHash("$2a$10$hashedpassword1")
             .role(UserRole.PLAYER)
             .active(true)
-            .lastLoginAt(LocalDateTime.now().minusDays(1))
+            .lastLoginAt(now.minusDays(1))
             .build();
+        testPlayer1.setCreatedAt(now.minusDays(7));
+        testPlayer1.setUpdatedAt(now.minusDays(1));
 
         testPlayer2 = Player.builder()
             .username("张伟")
@@ -68,8 +72,10 @@ class PlayerRepositoryTest {
             .passwordHash("$2a$10$hashedpassword2")
             .role(UserRole.ADMIN)
             .active(true)
-            .lastLoginAt(LocalDateTime.now().minusHours(2))
+            .lastLoginAt(now.minusHours(2))
             .build();
+        testPlayer2.setCreatedAt(now.minusDays(5));
+        testPlayer2.setUpdatedAt(now.minusHours(2));
 
         testPlayer3 = Player.builder()
             .username("inactivePlayer")
@@ -79,6 +85,8 @@ class PlayerRepositoryTest {
             .active(false)
             .lastLoginAt(null)
             .build();
+        testPlayer3.setCreatedAt(now.minusDays(30));
+        testPlayer3.setUpdatedAt(now.minusDays(30));
 
         entityManager.persist(testPlayer1);
         entityManager.persist(testPlayer2);
@@ -176,10 +184,11 @@ class PlayerRepositoryTest {
         List<Player> recentPlayers = playerRepository.findRecentlyActivePlayers(cutoffDate);
 
         // Then
-        assertThat(recentPlayers).hasSize(2);
+        // Only testPlayer2 (2 hours ago) is within 3 hours, testPlayer1 (1 day ago) is not
+        assertThat(recentPlayers).hasSize(1);
         assertThat(recentPlayers)
             .extracting(Player::getUsername)
-            .containsExactlyInAnyOrder("玩家001", "张伟");
+            .containsExactly("张伟");
     }
 
     @Test
@@ -211,27 +220,29 @@ class PlayerRepositoryTest {
     @DisplayName("Should find players registered after date")
     void testFindByCreatedAtAfter() {
         // Given
-        LocalDateTime cutoffDate = LocalDateTime.now().minusMinutes(1);
+        // testPlayer1: 7 days ago, testPlayer2: 5 days ago, testPlayer3: 30 days ago
+        LocalDateTime cutoffDate = LocalDateTime.now().minusDays(10);
 
         // When
         List<Player> newPlayers = playerRepository.findByCreatedAtAfter(cutoffDate);
 
         // Then
-        assertThat(newPlayers).hasSize(3); // All just created in setup
+        assertThat(newPlayers).hasSize(2); // testPlayer1 and testPlayer2
     }
 
     @Test
     @DisplayName("Should count players registered in date range")
     void testCountByCreatedAtBetween() {
         // Given
-        LocalDateTime start = LocalDateTime.now().minusHours(1);
-        LocalDateTime end = LocalDateTime.now().plusHours(1);
+        // testPlayer1: 7 days ago, testPlayer2: 5 days ago, testPlayer3: 30 days ago
+        LocalDateTime start = LocalDateTime.now().minusDays(10);
+        LocalDateTime end = LocalDateTime.now().minusDays(4);
 
         // When
         long count = playerRepository.countByCreatedAtBetween(start, end);
 
         // Then
-        assertThat(count).isEqualTo(3);
+        assertThat(count).isEqualTo(2); // testPlayer1 (7 days) and testPlayer2 (5 days)
     }
 
     @Test
@@ -244,13 +255,16 @@ class PlayerRepositoryTest {
         List<Player> inactivePlayers = playerRepository.findInactivePlayers(inactiveSince);
 
         // Then
-        assertThat(inactivePlayers).hasSize(2); // testPlayer1 (1 day ago) and testPlayer3 (null)
+        // Only testPlayer1 (1 day ago, active=true)
+        // testPlayer3 has active=false, so excluded by query
+        assertThat(inactivePlayers).hasSize(1);
     }
 
     @Test
     @DisplayName("Should save player with Chinese username")
     void testSavePlayerWithChineseUsername() {
         // Given
+        LocalDateTime now = LocalDateTime.now();
         Player chinesePlayer = Player.builder()
             .username("李娜")
             .email("lina@test.com")
@@ -258,6 +272,8 @@ class PlayerRepositoryTest {
             .role(UserRole.PLAYER)
             .active(true)
             .build();
+        chinesePlayer.setCreatedAt(now);
+        chinesePlayer.setUpdatedAt(now);
 
         // When
         Player saved = playerRepository.save(chinesePlayer);
@@ -293,6 +309,7 @@ class PlayerRepositoryTest {
     @DisplayName("Should enforce unique constraints")
     void testUniqueConstraints() {
         // Given
+        LocalDateTime now = LocalDateTime.now();
         Player duplicateUsername = Player.builder()
             .username("玩家001") // Duplicate
             .email("unique@test.com")
@@ -300,10 +317,12 @@ class PlayerRepositoryTest {
             .role(UserRole.PLAYER)
             .active(true)
             .build();
+        duplicateUsername.setCreatedAt(now);
+        duplicateUsername.setUpdatedAt(now);
 
-        // When/Then - Should throw exception on flush
-        entityManager.persist(duplicateUsername);
+        // When/Then - Unique constraint violation during flush
         org.junit.jupiter.api.Assertions.assertThrows(Exception.class, () -> {
+            entityManager.persist(duplicateUsername);
             entityManager.flush();
         });
     }

@@ -300,10 +300,10 @@ describe('questionTracker', () => {
   });
 
   describe('Edge cases', () => {
-    it('should handle empty string question IDs', () => {
+    it('should reject empty string question IDs', () => {
       const result = markQuestionAsSeen('IDIOM', 'EASY', '');
-      expect(result).toBe(true);
-      expect(hasSeenQuestion('IDIOM', 'EASY', '')).toBe(true);
+      expect(result).toBe(false);
+      expect(hasSeenQuestion('IDIOM', 'EASY', '')).toBe(false);
     });
 
     it('should handle special characters in question IDs', () => {

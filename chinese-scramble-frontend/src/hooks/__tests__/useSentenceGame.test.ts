@@ -184,7 +184,11 @@ describe('useSentenceGame', () => {
       const { result } = renderHook(() => useSentenceGame());
 
       await act(async () => {
-        await result.current.startGame(Difficulty.EASY);
+        try {
+          await result.current.startGame(Difficulty.EASY);
+        } catch (e) {
+          // Expected error - hook re-throws after setting state
+        }
       });
 
       expect(result.current.loading).toBe(false);

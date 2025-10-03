@@ -39,7 +39,12 @@ import java.util.Set;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = true, exclude = {
+    "idiomScores", "sentenceScores", "gameSessions", "leaderboardEntries", "achievements"
+})
+@ToString(exclude = {
+    "idiomScores", "sentenceScores", "gameSessions", "leaderboardEntries", "achievements"
+})
 public class Player extends BaseEntity {
 
     /**
