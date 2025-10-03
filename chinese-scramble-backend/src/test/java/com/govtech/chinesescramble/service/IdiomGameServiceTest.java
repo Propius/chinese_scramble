@@ -1,6 +1,7 @@
 package com.govtech.chinesescramble.service;
 
 import com.govtech.chinesescramble.entity.GameSession;
+import com.govtech.chinesescramble.entity.IdiomScore;
 import com.govtech.chinesescramble.entity.Player;
 import com.govtech.chinesescramble.entity.enums.DifficultyLevel;
 import com.govtech.chinesescramble.entity.enums.GameType;
@@ -265,5 +266,374 @@ class IdiomGameServiceTest {
 
         // Then
         verify(questionHistoryService).clearHistory(1L, "IDIOM");
+    }
+
+    // ========================================================================
+    // getPersonalBest() Tests - 0% coverage
+    // ========================================================================
+
+    @Test
+    void testGetPersonalBest_Found() {
+        // Given
+        var mockIdiomScore = IdiomScore.builder()
+            .player(testPlayer)
+            .idiom("一帆风顺")
+            .score(100)
+            .difficulty(DifficultyLevel.EASY)
+            .timeTaken(45)
+            .hintsUsed(0)
+            .accuracyRate(1.0)
+            .completed(true)
+            .build();
+
+        when(idiomScoreRepository.findPersonalBest(1L, DifficultyLevel.EASY))
+            .thenReturn(Optional.of(mockIdiomScore));
+
+        // When
+        Optional<IdiomScore> result = idiomGameService.getPersonalBest(1L, DifficultyLevel.EASY);
+
+        // Then
+        assertTrue(result.isPresent());
+        assertEquals(100, result.get().getScore());
+        assertEquals("一帆风顺", result.get().getIdiom());
+        verify(idiomScoreRepository).findPersonalBest(1L, DifficultyLevel.EASY);
+    }
+
+    @Test
+    void testGetPersonalBest_NotFound() {
+        // Given
+        when(idiomScoreRepository.findPersonalBest(1L, DifficultyLevel.EXPERT))
+            .thenReturn(Optional.empty());
+
+        // When
+        Optional<IdiomScore> result = idiomGameService.getPersonalBest(1L, DifficultyLevel.EXPERT);
+
+        // Then
+        assertTrue(result.isEmpty());
+        verify(idiomScoreRepository).findPersonalBest(1L, DifficultyLevel.EXPERT);
+    }
+
+    // ========================================================================
+    // generateHintContent() Tests - 32% coverage (levels 2 and 3 untested)
+    // ========================================================================
+
+    @Test
+    void testGetHint_Level2_WithPinyin() {
+        // Given
+        when(gameSessionService.getActiveSession(1L)).thenReturn(Optional.of(testSession));
+
+        Map<String, Object> sessionData = new HashMap<>();
+        sessionData.put("idiom", "一帆风顺");
+        when(gameSessionService.parseSessionData(anyString())).thenReturn(sessionData);
+
+        when(gameSessionService.getHintCount(1L)).thenReturn(0);
+
+        // Setup idiom details with pinyin
+        Map<String, Object> idiomDetails = new HashMap<>();
+        idiomDetails.put("idiom", "一帆风顺");
+        idiomDetails.put("pinyin", "yī fān fēng shùn");
+        idiomDetails.put("definition", "Smooth sailing");
+
+        when(configurationService.loadConfigurationAsMap("idioms.json")).thenReturn(idiomConfig);
+
+        // When
+        var result = idiomGameService.getHint(1L, 2);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(2, result.level());
+        assertNotNull(result.content());
+        assertTrue(result.content().contains("一")); // First character
+        assertTrue(result.content().contains("第一个字")); // Chinese description
+        verify(gameSessionService).addHintUsage(eq(1L), eq(2), anyInt(), anyString());
+    }
+
+    @Test
+    void testGetHint_Level3_WithUsageExample() {
+        // Given
+        when(gameSessionService.getActiveSession(1L)).thenReturn(Optional.of(testSession));
+
+        Map<String, Object> sessionData = new HashMap<>();
+        sessionData.put("idiom", "一帆风顺");
+        when(gameSessionService.parseSessionData(anyString())).thenReturn(sessionData);
+
+        when(gameSessionService.getHintCount(1L)).thenReturn(1); // Already used 1 hint
+
+        // Setup idiom details with usage
+        Map<String, Object> idiomDetails = new HashMap<>();
+        idiomDetails.put("idiom", "一帆风顺");
+        idiomDetails.put("usage", "祝你新的一年一帆风顺！");
+        idiomDetails.put("definition", "Smooth sailing");
+
+        when(configurationService.loadConfigurationAsMap("idioms.json")).thenReturn(idiomConfig);
+
+        // When
+        var result = idiomGameService.getHint(1L, 3);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(3, result.level());
+        assertNotNull(result.content());
+        assertTrue(result.content().contains("用法示例") || result.content().contains("提示"));
+        verify(gameSessionService).addHintUsage(eq(1L), eq(3), anyInt(), anyString());
+    }
+
+    @Test
+    void testGetHint_Level3_WithOrigin() {
+        // Given
+        when(gameSessionService.getActiveSession(1L)).thenReturn(Optional.of(testSession));
+
+        Map<String, Object> sessionData = new HashMap<>();
+        sessionData.put("idiom", "守株待兔");
+        when(gameSessionService.parseSessionData(anyString())).thenReturn(sessionData);
+
+        when(gameSessionService.getHintCount(1L)).thenReturn(0);
+
+        // Setup idiom details with origin but no usage
+        Map<String, Object> idiomDetails = new HashMap<>();
+        idiomDetails.put("idiom", "守株待兔");
+        idiomDetails.put("origin", "《韩非子·五蠹》");
+        idiomDetails.put("definition", "Wait for windfalls");
+
+        when(configurationService.loadConfigurationAsMap("idioms.json")).thenReturn(idiomConfig);
+
+        // When
+        var result = idiomGameService.getHint(1L, 3);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(3, result.level());
+        assertNotNull(result.content());
+        assertTrue(result.content().contains("出处提示") || result.content().contains("提示"));
+    }
+
+    @Test
+    void testGetHint_Level3_Fallback() {
+        // Given
+        when(gameSessionService.getActiveSession(1L)).thenReturn(Optional.of(testSession));
+
+        Map<String, Object> sessionData = new HashMap<>();
+        sessionData.put("idiom", "一帆风顺");
+        when(gameSessionService.parseSessionData(anyString())).thenReturn(sessionData);
+
+        when(gameSessionService.getHintCount(1L)).thenReturn(0);
+
+        // Setup minimal idiom details (no usage or origin)
+        Map<String, Object> idiomDetails = new HashMap<>();
+        idiomDetails.put("idiom", "一帆风顺");
+        idiomDetails.put("definition", "Smooth sailing");
+
+        when(configurationService.loadConfigurationAsMap("idioms.json")).thenReturn(idiomConfig);
+
+        // When
+        var result = idiomGameService.getHint(1L, 3);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(3, result.level());
+        assertNotNull(result.content());
+        assertTrue(result.content().contains("提示")); // Fallback hint
+        assertTrue(result.content().contains("4个字")); // Character count (一帆风顺 = 4)
+    }
+
+    @Test
+    void testGetHint_MaxHintsExceeded() {
+        // Given
+        when(gameSessionService.getActiveSession(1L)).thenReturn(Optional.of(testSession));
+        when(gameSessionService.getHintCount(1L)).thenReturn(3); // Already used 3 hints
+
+        // When/Then
+        assertThrows(IllegalStateException.class,
+            () -> idiomGameService.getHint(1L, 1));
+
+        verify(gameSessionService, never()).addHintUsage(anyLong(), anyInt(), anyInt(), anyString());
+    }
+
+    @Test
+    void testGetHint_Level1_WithMeaningAndDefinition() {
+        // Given
+        when(gameSessionService.getActiveSession(1L)).thenReturn(Optional.of(testSession));
+
+        Map<String, Object> sessionData = new HashMap<>();
+        sessionData.put("idiom", "画蛇添足");
+        when(gameSessionService.parseSessionData(anyString())).thenReturn(sessionData);
+
+        when(gameSessionService.getHintCount(1L)).thenReturn(0);
+
+        // Setup idiom config with definition and meaning
+        Map<String, Object> idiomWithDetails = new HashMap<>();
+        idiomWithDetails.put("idiom", "画蛇添足");
+        idiomWithDetails.put("definition", "给蛇画上脚，比喻做多余的事");
+        idiomWithDetails.put("meaning", "Gild the lily");
+        idiomWithDetails.put("difficulty", "MEDIUM");
+
+        Map<String, Object> configWithDetails = new HashMap<>();
+        configWithDetails.put("idioms", List.of(idiomWithDetails));
+
+        when(configurationService.loadConfigurationAsMap("idioms.json")).thenReturn(configWithDetails);
+
+        // When
+        var result = idiomGameService.getHint(1L, 1);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(1, result.level());
+        assertNotNull(result.content());
+        assertTrue(result.content().contains("含义提示") || result.content().contains("给蛇画上脚"));
+        assertTrue(result.content().contains("英文释义") || result.content().contains("Gild the lily"));
+    }
+
+    @Test
+    void testGetHint_Level1_OnlyDefinition() {
+        // Given
+        when(gameSessionService.getActiveSession(1L)).thenReturn(Optional.of(testSession));
+
+        Map<String, Object> sessionData = new HashMap<>();
+        sessionData.put("idiom", "一帆风顺");
+        when(gameSessionService.parseSessionData(anyString())).thenReturn(sessionData);
+
+        when(gameSessionService.getHintCount(1L)).thenReturn(0);
+
+        // Setup idiom details with only definition (no meaning)
+        Map<String, Object> idiomDetails = new HashMap<>();
+        idiomDetails.put("idiom", "一帆风顺");
+        idiomDetails.put("definition", "旅途平安顺利");
+
+        when(configurationService.loadConfigurationAsMap("idioms.json")).thenReturn(idiomConfig);
+
+        // When
+        var result = idiomGameService.getHint(1L, 1);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(1, result.level());
+        assertNotNull(result.content());
+        assertTrue(result.content().contains("含义提示"));
+    }
+
+    @Test
+    void testGetHint_Level1_NoDetails() {
+        // Given
+        when(gameSessionService.getActiveSession(1L)).thenReturn(Optional.of(testSession));
+
+        Map<String, Object> sessionData = new HashMap<>();
+        sessionData.put("idiom", "一帆风顺");
+        when(gameSessionService.parseSessionData(anyString())).thenReturn(sessionData);
+
+        when(gameSessionService.getHintCount(1L)).thenReturn(0);
+
+        // Setup minimal idiom details (no definition or meaning)
+        Map<String, Object> idiomMinimal = new HashMap<>();
+        idiomMinimal.put("idiom", "一帆风顺");
+        idiomMinimal.put("difficulty", "EASY");
+
+        Map<String, Object> configMinimal = new HashMap<>();
+        configMinimal.put("idioms", List.of(idiomMinimal));
+
+        when(configurationService.loadConfigurationAsMap("idioms.json")).thenReturn(configMinimal);
+
+        // When
+        var result = idiomGameService.getHint(1L, 1);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(1, result.level());
+        assertNotNull(result.content());
+        assertTrue(result.content().contains("常见成语") || result.content().contains("提示")); // Fallback hint
+    }
+
+    // ========================================================================
+    // IdiomGameResult Record Helper Method Tests
+    // ========================================================================
+
+    @Test
+    void testIdiomGameResult_IsPerfectScore_True() {
+        // Given
+        var result = new IdiomGameService.IdiomGameResult(
+            true, "一帆风顺", "一帆风顺", 100, 1.0, 45, 0,
+            List.of(), "definition", "meaning", "usage", "pinyin"
+        );
+
+        // When/Then
+        assertTrue(result.isPerfectScore());
+    }
+
+    @Test
+    void testIdiomGameResult_IsPerfectScore_False_Incorrect() {
+        // Given - incorrect answer
+        var result = new IdiomGameService.IdiomGameResult(
+            false, "一帆风顺", "风顺一帆", 0, 0.5, 45, 0,
+            List.of(), "definition", "meaning", "usage", "pinyin"
+        );
+
+        // When/Then
+        assertFalse(result.isPerfectScore());
+    }
+
+    @Test
+    void testIdiomGameResult_IsPerfectScore_False_HintsUsed() {
+        // Given - correct but used hints
+        var result = new IdiomGameService.IdiomGameResult(
+            true, "一帆风顺", "一帆风顺", 80, 1.0, 45, 2,
+            List.of(), "definition", "meaning", "usage", "pinyin"
+        );
+
+        // When/Then
+        assertFalse(result.isPerfectScore());
+    }
+
+    @Test
+    void testIdiomGameResult_IsPerfectScore_False_LowAccuracy() {
+        // Given - correct but low accuracy
+        var result = new IdiomGameService.IdiomGameResult(
+            true, "一帆风顺", "一帆风顺", 90, 0.8, 45, 0,
+            List.of(), "definition", "meaning", "usage", "pinyin"
+        );
+
+        // When/Then
+        assertFalse(result.isPerfectScore());
+    }
+
+    // ========================================================================
+    // getPlayerHistory() Test
+    // ========================================================================
+
+    @Test
+    void testGetPlayerHistory() {
+        // Given
+        List<IdiomScore> mockHistory = List.of(
+            IdiomScore.builder()
+                .player(testPlayer)
+                .idiom("一帆风顺")
+                .score(100)
+                .difficulty(DifficultyLevel.EASY)
+                .timeTaken(45)
+                .hintsUsed(0)
+                .accuracyRate(1.0)
+                .completed(true)
+                .build(),
+            IdiomScore.builder()
+                .player(testPlayer)
+                .idiom("画蛇添足")
+                .score(85)
+                .difficulty(DifficultyLevel.MEDIUM)
+                .timeTaken(60)
+                .hintsUsed(1)
+                .accuracyRate(0.9)
+                .completed(true)
+                .build()
+        );
+
+        when(idiomScoreRepository.findRecentScores(1L)).thenReturn(mockHistory);
+
+        // When
+        List<IdiomScore> result = idiomGameService.getPlayerHistory(1L, 10);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        assertEquals("一帆风顺", result.get(0).getIdiom());
+        assertEquals("画蛇添足", result.get(1).getIdiom());
+        verify(idiomScoreRepository).findRecentScores(1L);
     }
 }
