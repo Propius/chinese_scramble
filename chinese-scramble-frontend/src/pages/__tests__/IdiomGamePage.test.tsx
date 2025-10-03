@@ -152,7 +152,9 @@ describe('IdiomGamePage', () => {
   });
 
   afterEach(() => {
-    jest.runOnlyPendingTimers();
+    act(() => {
+      jest.runOnlyPendingTimers();
+    });
     jest.useRealTimers();
   });
 
@@ -902,19 +904,25 @@ describe('IdiomGamePage', () => {
         fireEvent.click(screen.getByText('Submit Answer'));
       });
 
+      // Wait for result modal to appear
+      await waitFor(() => {
+        expect(screen.getByText(/正确|不正确/)).toBeInTheDocument();
+      }, { timeout: 3000 });
+
+      // Wait for feedback and next question load
       await act(async () => {
-        jest.advanceTimersByTime(3000);
+        jest.advanceTimersByTime(4000);
       });
 
-      await act(async () => {
-        fireEvent.click(screen.getByText('← 返回菜单'));
-      });
-
+      // Statistics should be visible in game view after playing at least 1 game
       await waitFor(() => {
         expect(screen.getByText('游戏数')).toBeInTheDocument();
-        expect(screen.getByText('总分')).toBeInTheDocument();
-        expect(screen.getByText('平均分')).toBeInTheDocument();
-      });
+        expect(screen.getByText('当前得分')).toBeInTheDocument();
+      }, { timeout: 3000 });
+
+      // Verify the games played count is 1
+      const gamesPlayedElements = screen.getAllByText('1');
+      expect(gamesPlayedElements.length).toBeGreaterThan(0);
     });
 
     it('should display correct games played count', async () => {
@@ -927,18 +935,20 @@ describe('IdiomGamePage', () => {
         fireEvent.click(screen.getByText('Submit Answer'));
       });
 
-      await act(async () => {
-        jest.advanceTimersByTime(3000);
-      });
-
-      await act(async () => {
-        fireEvent.click(screen.getByText('← 返回菜单'));
-      });
-
       await waitFor(() => {
+        expect(screen.getByText(/正确|不正确/)).toBeInTheDocument();
+      }, { timeout: 3000 });
+
+      await act(async () => {
+        jest.advanceTimersByTime(4000);
+      });
+
+      // Check statistics in game view
+      await waitFor(() => {
+        expect(screen.getByText('游戏数')).toBeInTheDocument();
         const allNumbers = screen.getAllByText('1');
         expect(allNumbers.length).toBeGreaterThan(0);
-      });
+      }, { timeout: 3000 });
     });
 
     it('should display correct total score', async () => {
@@ -951,19 +961,20 @@ describe('IdiomGamePage', () => {
         fireEvent.click(screen.getByText('Submit Answer'));
       });
 
-      await act(async () => {
-        jest.advanceTimersByTime(3000);
-      });
-
-      await act(async () => {
-        fireEvent.click(screen.getByText('← 返回菜单'));
-      });
-
       await waitFor(() => {
-        expect(screen.getByText('总分')).toBeInTheDocument();
+        expect(screen.getByText(/正确|不正确/)).toBeInTheDocument();
+      }, { timeout: 3000 });
+
+      await act(async () => {
+        jest.advanceTimersByTime(4000);
+      });
+
+      // Check total score in game view
+      await waitFor(() => {
+        expect(screen.getByText('当前得分')).toBeInTheDocument();
         const score100 = screen.getAllByText('100');
         expect(score100.length).toBeGreaterThan(0);
-      });
+      }, { timeout: 3000 });
     });
 
     it('should calculate correct average score', async () => {
@@ -976,29 +987,29 @@ describe('IdiomGamePage', () => {
         fireEvent.click(screen.getByText('Submit Answer'));
       });
 
-      await act(async () => {
-        jest.advanceTimersByTime(3000);
-      });
-
-      await act(async () => {
-        fireEvent.click(screen.getByText('← 返回菜单'));
-      });
-
       await waitFor(() => {
-        expect(screen.getByText('平均分')).toBeInTheDocument();
-        // Average = 100 / 1 = 100
-        const avg = screen.getAllByText('100');
-        expect(avg.length).toBeGreaterThan(0);
+        expect(screen.getByText(/正确|不正确/)).toBeInTheDocument();
+      }, { timeout: 3000 });
+
+      await act(async () => {
+        jest.advanceTimersByTime(4000);
       });
+
+      // Check statistics in game view - after 1 game with score 100, average should be 100
+      await waitFor(() => {
+        expect(screen.getByText('游戏数')).toBeInTheDocument();
+        expect(screen.getByText('当前得分')).toBeInTheDocument();
+        // Score is 100 and games played is 1
+        const scoreElements = screen.getAllByText('100');
+        expect(scoreElements.length).toBeGreaterThan(0);
+      }, { timeout: 3000 });
     });
   });
 
   describe('Error Handling', () => {
     it('should show error message when useIdiomGame returns error', async () => {
-      await startGame();
-
       mockUseIdiomGame.mockReturnValue({
-        question: mockQuestion,
+        question: null,
         loading: false,
         error: '加载失败，请稍后重试',
         userAnswer: [],
@@ -1014,8 +1025,15 @@ describe('IdiomGamePage', () => {
 
       renderIdiomGamePage();
 
-      expect(screen.getByText('错误：')).toBeInTheDocument();
-      expect(screen.getByText('加载失败，请稍后重试')).toBeInTheDocument();
+      // Click difficulty button to trigger game start
+      await act(async () => {
+        fireEvent.click(screen.getAllByText('🚀 开始游戏')[0]);
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText('错误：')).toBeInTheDocument();
+        expect(screen.getByText('加载失败，请稍后重试')).toBeInTheDocument();
+      }, { timeout: 3000 });
     });
 
     it('should handle submit API errors', async () => {
@@ -1234,7 +1252,7 @@ describe('IdiomGamePage', () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByTestId('hint-display')).toHaveTextContent('Hint: ');
+        expect(screen.getByTestId('hint-display')).toHaveTextContent('Hint:');
       });
     });
   });

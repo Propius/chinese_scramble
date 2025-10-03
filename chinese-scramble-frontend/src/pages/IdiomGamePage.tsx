@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import Header from '../components/layout/Header';
 import { Difficulty, DIFFICULTY_LABELS } from '../constants/difficulties';
@@ -25,7 +25,7 @@ export const IdiomGamePage: React.FC = () => {
   const { t } = useTranslation();
   const [difficulty, setDifficulty] = useState<Difficulty>(Difficulty.EASY);
   const [gameStarted, setGameStarted] = useState(false);
-  const { question, loading, error: hookError, startGame } = useIdiomGame();
+  const { question, loading, error: hookError, startGame, clearError: clearHookError } = useIdiomGame();
   const [error, setError] = useState<string | null>(null);
   const [gameResult, setGameResult] = useState<GameResult | null>(null);
   const [hint, setHint] = useState<string>('');
@@ -34,6 +34,7 @@ export const IdiomGamePage: React.FC = () => {
   const [gamesPlayed, setGamesPlayed] = useState(0);
   const [showConfetti, setShowConfetti] = useState(false);
   const [quizCompleted, setQuizCompleted] = useState(false);
+  const isLoadingNextQuestion = useRef(false);
 
   // Reset completion state and clear stale localStorage when component mounts
   useEffect(() => {
@@ -62,7 +63,10 @@ export const IdiomGamePage: React.FC = () => {
     } catch (err: any) {
       // Check if quiz is completed
       const errorData = err.response?.data;
-      if (errorData?.details?.allQuestionsCompleted || errorData?.error?.includes('已完成所有')) {
+      const errorMessage = errorData?.error || errorData?.message || err.message || '';
+      const isCompleted = errorMessage.includes('已完成所有');
+
+      if (isCompleted) {
         console.log('[IdiomGamePage] All questions completed, attempting restart...');
 
         // Try to restart and start fresh
@@ -75,6 +79,10 @@ export const IdiomGamePage: React.FC = () => {
 
           // Clear frontend state
           questionTracker.resetSeenQuestions('IDIOM');
+
+          // CRITICAL: Clear hook error state before retrying
+          clearHookError();
+          setError(null);
 
           // Try starting again
           console.log('[IdiomGamePage] Retrying startGame after restart...');
@@ -123,43 +131,63 @@ export const IdiomGamePage: React.FC = () => {
 
       // Check if no-repeat feature is enabled
       if (DEFAULT_FEATURE_FLAGS.ENABLE_NO_REPEAT_QUESTIONS) {
-        // NO-REPEAT ENABLED: Try to preload next question IMMEDIATELY to check for completion
-        (async () => {
-          try {
-            // Attempt to preload next question (in background)
-            await startGame(difficulty);
+        // NO-REPEAT ENABLED: Check for completion BEFORE showing feedback
+        // Use ref to prevent multiple simultaneous calls
+        if (!isLoadingNextQuestion.current) {
+          isLoadingNextQuestion.current = true;
+          (async () => {
+            try {
+              // Attempt to preload next question (in background)
+              await startGame(difficulty);
+              isLoadingNextQuestion.current = false;
 
-            // Success! More questions exist.
-            // Show current result, wait 3 seconds, then clear to reveal loaded question
-            setGameResult(result);
-            setTimeout(() => {
-              setGameResult(null);
-              setHint('');
-            }, 3000);
-
-          } catch (startErr: any) {
-            // Failed to load next question - check if it's completion
-            const errorData = startErr.response?.data;
-            if (errorData?.details?.allQuestionsCompleted || errorData?.error?.includes('已完成所有')) {
-              // IT'S THE LAST QUESTION! Skip feedback, go STRAIGHT to completion
-              // CRITICAL: Clear error state from hook to prevent error banner
-              setError(null);
-              setQuizCompleted(true);
-              setGameResult({
-                ...result,
-                allQuestionsCompleted: true,
-                feedback: errorData?.message || errorData?.error || '恭喜！您已完成所有题目！',
-              });
-            } else {
-              // Other error - show normal feedback flow
+              // Success! More questions exist.
+              // Show current result, wait 3 seconds, then clear to reveal loaded question
               setGameResult(result);
               setTimeout(() => {
-                setGameResult(null);
-                setHint('');
+                // Double-check quiz wasn't completed during the wait
+                if (!quizCompleted) {
+                  setGameResult(null);
+                  setHint('');
+                }
               }, 3000);
+
+            } catch (startErr: any) {
+              isLoadingNextQuestion.current = false;
+              // Failed to load next question - check if it's completion
+              const errorData = startErr.response?.data;
+              const errorMessage = errorData?.error || errorData?.message || startErr.message || '';
+              if (errorMessage.includes('已完成所有')) {
+                // IT'S THE LAST QUESTION! Go STRAIGHT to completion WITHOUT showing feedback first
+                // CRITICAL: Clear error state from hook to prevent error banner
+                clearHookError();
+                setError(null);
+                setQuizCompleted(true);
+                setGameResult({
+                  isCorrect: result.isCorrect,
+                  score: result.score,
+                  feedback: result.feedback,
+                  allQuestionsCompleted: true,
+                });
+
+                // Show confetti if last answer was correct
+                if (result.isCorrect) {
+                  setShowConfetti(true);
+                  setTimeout(() => setShowConfetti(false), 3000);
+                }
+              } else {
+                // Other error - show normal feedback flow
+                setGameResult(result);
+                setTimeout(() => {
+                  if (!quizCompleted) {
+                    setGameResult(null);
+                    setHint('');
+                  }
+                }, 3000);
+              }
             }
-          }
-        })();
+          })();
+        }
       } else {
         // NO-REPEAT DISABLED: Show result briefly, then try to load next question
         setGameResult(result);
@@ -174,7 +202,8 @@ export const IdiomGamePage: React.FC = () => {
             console.error('[IdiomGamePage] Failed to load next question:', loadErr);
 
             // Check if backend says all questions completed (backend bug - shouldn't track when flag is OFF)
-            if (errorData?.details?.allQuestionsCompleted || errorData?.error?.includes('已完成所有') || errorData?.error?.includes('已经完成所有')) {
+            const errorMessage = errorData?.error || errorData?.message || loadErr.message || '';
+            if (errorMessage.includes('已完成所有') || errorMessage.includes('已经完成所有')) {
               console.log('[IdiomGamePage] Backend tracking completion even with flag OFF - calling restart to reset');
               try {
                 // Call restart endpoint to reset backend state
@@ -212,24 +241,75 @@ export const IdiomGamePage: React.FC = () => {
     }
   };
 
-  const handleTimeout = () => {
+  const handleTimeout = async () => {
     // Don't handle timeout if quiz is already completed
     if (quizCompleted) {
       return;
     }
 
     soundManager.playLose();
-    setGameResult({
-      isCorrect: false,
-      score: 0,
-      feedback: '时间到！请再试一次。',
-    });
 
-    setTimeout(async () => {
-      setGameResult(null);
-      setHint('');
-      await startGame(difficulty);
-    }, 3000);
+    // When feature flag is ON, check if this is the last question
+    if (DEFAULT_FEATURE_FLAGS.ENABLE_NO_REPEAT_QUESTIONS) {
+      // Prevent multiple simultaneous calls
+      if (!isLoadingNextQuestion.current) {
+        isLoadingNextQuestion.current = true;
+        try {
+          // Make ONE API call to check if more questions exist
+          await startGame(difficulty);
+          isLoadingNextQuestion.current = false;
+
+          // Success = more questions exist
+          // Show timeout message and preloaded next question
+          setGameResult({
+            isCorrect: false,
+            score: 0,
+            feedback: '时间到！',
+          });
+
+          // Auto-advance to next question after 3 seconds
+          setTimeout(() => {
+            if (!quizCompleted) {
+              setGameResult(null);
+              setHint('');
+            }
+          }, 3000);
+
+        } catch (err: any) {
+          isLoadingNextQuestion.current = false;
+          // Failed = check if it's completion or error
+          const errorData = err.response?.data;
+          const errorMessage = errorData?.error || errorData?.message || err.message || '';
+
+          if (errorMessage.includes('已完成所有')) {
+            // This is the LAST question - show completion page
+            clearHookError();
+            setError(null);
+            setQuizCompleted(true);
+            setGameResult({
+              isCorrect: false,
+              score: 0,
+              allQuestionsCompleted: true,
+              feedback: '所有题目已完成！',
+            });
+          } else {
+            // Other error - show timeout with manual return
+            setGameResult({
+              isCorrect: false,
+              score: 0,
+              feedback: '时间到！请返回菜单重新开始。',
+            });
+          }
+        }
+      }
+    } else {
+      // Feature flag OFF - just show timeout message
+      setGameResult({
+        isCorrect: false,
+        score: 0,
+        feedback: '时间到！请返回菜单重新开始。',
+      });
+    }
   };
 
   const handleHintRequest = async (level: number) => {

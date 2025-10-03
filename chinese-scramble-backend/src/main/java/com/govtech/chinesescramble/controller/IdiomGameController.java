@@ -27,7 +27,7 @@ import java.util.Map;
  * @version 1.0.0
  */
 @RestController
-@RequestMapping("/api/games/idiom")
+@RequestMapping("/api/idiom-game")
 @RequiredArgsConstructor
 @Slf4j
 public class IdiomGameController {
@@ -38,14 +38,45 @@ public class IdiomGameController {
     /**
      * Starts a new idiom game
      */
-    @PostMapping("/start")
+    @GetMapping("/start")
     public ResponseEntity<?> startGame(
-        @RequestParam Long playerId,
-        @RequestBody @Valid GameStartRequest request
+        @RequestParam String difficulty,
+        @RequestParam(required = false) String playerId
     ) {
+        // Resolve player ID from playerId parameter or use default
+        Long playerIdLong = 1L;
         try {
-            log.info("Starting idiom game for player {} with difficulty {}", playerId, request.difficulty());
-            var gameState = idiomGameService.startGame(playerId, request.difficulty());
+            if (playerId != null && !playerId.isEmpty()) {
+                try {
+                    playerIdLong = Long.parseLong(playerId);
+                } catch (NumberFormatException e) {
+                    // It's a username, look up or create the player
+                    var player = playerService.getPlayerByUsername(playerId);
+                    if (player.isEmpty()) {
+                        // Auto-create player with this username
+                        try {
+                            var newPlayer = playerService.registerPlayer(playerId, playerId + "@game.local", "password123");
+                            playerIdLong = newPlayer.getId();
+                            log.info("Auto-created player: {} with ID: {}", playerId, playerIdLong);
+                        } catch (IllegalArgumentException ex) {
+                            // Player was created by another request, fetch it
+                            if (ex.getMessage() != null && ex.getMessage().contains("already exists")) {
+                                player = playerService.getPlayerByUsername(playerId);
+                                playerIdLong = player.map(Player::getId).orElse(1L);
+                                log.info("Player {} already exists with ID: {}", playerId, playerIdLong);
+                            } else {
+                                log.error("Failed to auto-create player: {}", playerId, ex);
+                                return ResponseEntity.badRequest().body(Map.of("error", "Failed to create player: " + playerId));
+                            }
+                        }
+                    } else {
+                        playerIdLong = player.get().getId();
+                    }
+                }
+            }
+
+            log.info("Starting idiom game for player {} with difficulty {}", playerIdLong, difficulty);
+            var gameState = idiomGameService.startGame(playerIdLong, com.govtech.chinesescramble.entity.enums.DifficultyLevel.valueOf(difficulty.toUpperCase()));
             return ResponseEntity.ok(gameState);
         } catch (IllegalArgumentException e) {
             log.error("Invalid request for idiom game", e);

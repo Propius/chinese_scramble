@@ -31,7 +31,9 @@ describe('WordDropZone', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
-    jest.runOnlyPendingTimers();
+    act(() => {
+      jest.runOnlyPendingTimers();
+    });
     jest.useRealTimers();
   });
 

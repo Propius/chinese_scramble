@@ -66,7 +66,7 @@ export const SentenceGame: React.FC<SentenceGameProps> = ({
   // Timer countdown - using ref to avoid onTimeout dependency
   useEffect(() => {
     if (timeLeft <= 0) {
-      soundManager.playTimeout();
+      // Don't play sound here - parent will play it
       onTimeoutRef.current();
       return;
     }
@@ -74,7 +74,7 @@ export const SentenceGame: React.FC<SentenceGameProps> = ({
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
-          soundManager.playTimeout();
+          // Don't play sound here - parent will play it
           onTimeoutRef.current();
           return 0;
         }

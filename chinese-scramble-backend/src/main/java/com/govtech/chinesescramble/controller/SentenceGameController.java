@@ -42,9 +42,9 @@ public class SentenceGameController {
         @RequestParam String difficulty,
         @RequestParam(required = false) String playerId
     ) {
+        // Resolve player ID from playerId parameter or use default
+        Long playerIdLong = 1L;
         try {
-            // Resolve player ID from playerId parameter or use default
-            Long playerIdLong = 1L;
             if (playerId != null && !playerId.isEmpty()) {
                 try {
                     playerIdLong = Long.parseLong(playerId);

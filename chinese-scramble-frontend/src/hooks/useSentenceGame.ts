@@ -130,6 +130,10 @@ export const useSentenceGame = () => {
     setState(prev => ({ ...prev, userAnswer: answer }));
   }, []);
 
+  const clearError = useCallback(() => {
+    setState(prev => ({ ...prev, error: null }));
+  }, []);
+
   const reset = useCallback(() => {
     setState({
       question: null,
@@ -148,6 +152,7 @@ export const useSentenceGame = () => {
     submitAnswer,
     getHint,
     setUserAnswer,
+    clearError,
     reset
   };
 };

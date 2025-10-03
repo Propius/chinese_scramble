@@ -129,10 +129,10 @@ describe('sentenceService', () => {
 
       const result = await sentenceService.validateAnswer(mockRequest, 'player-456');
 
-      expect(mockedApiClient.post).toHaveBeenCalledWith('/api/sentence-game/submit', {
-        ...mockRequest,
-        playerId: 'player-456'
-      });
+      expect(mockedApiClient.post).toHaveBeenCalledWith(
+        '/api/sentence-game/submit?playerId=player-456',
+        mockRequest
+      );
       expect(result).toEqual(mockResponse);
     });
 
@@ -224,10 +224,10 @@ describe('sentenceService', () => {
 
       const result = await sentenceService.getHint(mockHintRequest, 'player-456');
 
-      expect(mockedApiClient.post).toHaveBeenCalledWith('/api/sentence-game/hint', {
-        ...mockHintRequest,
-        playerId: 'player-456'
-      });
+      expect(mockedApiClient.post).toHaveBeenCalledWith(
+        '/api/sentence-game/hint?playerId=player-456',
+        mockHintRequest
+      );
       expect(result).toEqual(mockHintResponse);
     });
 

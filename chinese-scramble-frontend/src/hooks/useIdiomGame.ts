@@ -126,6 +126,10 @@ export const useIdiomGame = () => {
     setState(prev => ({ ...prev, userAnswer: answer }));
   }, []);
 
+  const clearError = useCallback(() => {
+    setState(prev => ({ ...prev, error: null }));
+  }, []);
+
   const reset = useCallback(() => {
     setState({
       question: null,
@@ -144,6 +148,7 @@ export const useIdiomGame = () => {
     submitAnswer,
     getHint,
     setUserAnswer,
+    clearError,
     reset
   };
 };

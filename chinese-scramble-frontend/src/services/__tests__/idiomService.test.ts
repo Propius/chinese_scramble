@@ -128,10 +128,10 @@ describe('idiomService', () => {
 
       const result = await idiomService.validateAnswer(mockRequest, 'player-123');
 
-      expect(mockedApiClient.post).toHaveBeenCalledWith('/api/idiom-game/submit', {
-        ...mockRequest,
-        playerId: 'player-123'
-      });
+      expect(mockedApiClient.post).toHaveBeenCalledWith(
+        '/api/idiom-game/submit?playerId=player-123',
+        mockRequest
+      );
       expect(result).toEqual(mockResponse);
     });
 
@@ -211,10 +211,10 @@ describe('idiomService', () => {
 
       const result = await idiomService.getHint(mockHintRequest, 'player-123');
 
-      expect(mockedApiClient.post).toHaveBeenCalledWith('/api/idiom-game/hint', {
-        ...mockHintRequest,
-        playerId: 'player-123'
-      });
+      expect(mockedApiClient.post).toHaveBeenCalledWith(
+        '/api/idiom-game/hint?playerId=player-123',
+        mockHintRequest
+      );
       expect(result).toEqual(mockHintResponse);
     });
 

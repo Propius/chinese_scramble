@@ -81,7 +81,7 @@ export const WordDropZone: React.FC<WordDropZoneProps> = ({
           ? 'scale-110 animate-pulse border-4 border-green-400'
           : 'border-4 border-dashed border-amber-300'
         }
-        ${canDrop && !disabled && !isActive && 'border-4 border-dashed border-blue-400'}
+        ${canDrop && !disabled && !isActive && !word && 'border-4 border-dashed border-blue-400'}
         ${!canDrop && !disabled && !word && 'hover:scale-105 hover:border-blue-400'}
         ${disabled && 'opacity-50 cursor-not-allowed'}
       `}
