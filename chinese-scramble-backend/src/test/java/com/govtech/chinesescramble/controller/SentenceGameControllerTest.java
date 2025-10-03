@@ -647,4 +647,84 @@ class SentenceGameControllerTest {
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("Database error"));
     }
+
+    // ========================================================================
+    // Branch Coverage Tests - Race Condition Scenarios
+    // ========================================================================
+
+    @Test
+    void submitAnswer_PlayerCreationRaceCondition_HandlesAlreadyExists() throws Exception {
+        // Given: Simulate race condition where player is created between empty check and register
+        AnswerSubmissionRequest request = new AnswerSubmissionRequest("我喜欢学习", 50, 0);
+        Player existingPlayer = createPlayer(30L, "sentencerace");
+        SentenceGameService.SentenceGameResult mockResult = createMockGameResult(100, 50, 0);
+
+        when(playerService.getPlayerByUsername("sentencerace"))
+            .thenReturn(Optional.empty())
+            .thenReturn(Optional.of(existingPlayer));
+        when(playerService.registerPlayer("sentencerace", "sentencerace@game.local", "password123"))
+            .thenThrow(new IllegalArgumentException("Player with username sentencerace already exists"));
+        when(sentenceGameService.submitAnswer(30L, "我喜欢学习", 50, 0))
+            .thenReturn(mockResult);
+
+        // When & Then
+        mockMvc.perform(post("/api/sentence-game/submit")
+                .param("playerId", "sentencerace")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.isValid").value(true));
+
+        verify(playerService).registerPlayer("sentencerace", "sentencerace@game.local", "password123");
+        verify(sentenceGameService).submitAnswer(30L, "我喜欢学习", 50, 0);
+    }
+
+    @Test
+    void getHint_PlayerCreationRaceCondition_HandlesAlreadyExists() throws Exception {
+        // Given: Simulate race condition in hint endpoint
+        Player existingPlayer = createPlayer(35L, "sentencehint");
+        SentenceGameService.SentenceHint mockHint = createMockHint(1);
+
+        when(playerService.getPlayerByUsername("sentencehint"))
+            .thenReturn(Optional.empty())
+            .thenReturn(Optional.of(existingPlayer));
+        when(playerService.registerPlayer("sentencehint", "sentencehint@game.local", "password123"))
+            .thenThrow(new IllegalArgumentException("Player with username sentencehint already exists"));
+        when(sentenceGameService.getHint(35L, 1))
+            .thenReturn(mockHint);
+
+        // When & Then
+        mockMvc.perform(post("/api/sentence-game/hint/1")
+                .param("playerId", "sentencehint"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.level").value(1));
+
+        verify(playerService).registerPlayer("sentencehint", "sentencehint@game.local", "password123");
+        verify(sentenceGameService).getHint(35L, 1);
+    }
+
+    @Test
+    void startGame_PlayerCreationRaceCondition_HandlesAlreadyExists() throws Exception {
+        // Given: Simulate race condition in startGame endpoint
+        Player existingPlayer = createPlayer(40L, "sentencestart");
+        SentenceGameService.SentenceGameState mockGameState = createMockGameState();
+
+        when(playerService.getPlayerByUsername("sentencestart"))
+            .thenReturn(Optional.empty())
+            .thenReturn(Optional.of(existingPlayer));
+        when(playerService.registerPlayer("sentencestart", "sentencestart@game.local", "password123"))
+            .thenThrow(new IllegalArgumentException("Player with username sentencestart already exists"));
+        when(sentenceGameService.startGame(40L, DifficultyLevel.EASY))
+            .thenReturn(mockGameState);
+
+        // When & Then
+        mockMvc.perform(get("/api/sentence-game/start")
+                .param("difficulty", "EASY")
+                .param("playerId", "sentencestart"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.wordCount").value(4));
+
+        verify(playerService).registerPlayer("sentencestart", "sentencestart@game.local", "password123");
+        verify(sentenceGameService).startGame(40L, DifficultyLevel.EASY);
+    }
 }

@@ -500,4 +500,88 @@ class IdiomGameControllerIntegrationTest {
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("Database error"));
     }
+
+    // ========================================================================
+    // Branch Coverage Tests - Race Condition Scenarios
+    // ========================================================================
+
+    @Test
+    void submitAnswer_PlayerCreationRaceCondition_HandlesAlreadyExists() throws Exception {
+        // Given: Simulate race condition where player is created between empty check and register
+        AnswerSubmissionRequest request = new AnswerSubmissionRequest("一心一意", 50, 0);
+        Player existingPlayer = createPlayer(15L, "raceuser");
+        IdiomGameService.IdiomGameResult mockResult = createMockGameResult(100, 50, 0);
+
+        when(playerService.getPlayerByUsername("raceuser"))
+            .thenReturn(Optional.empty()) // First check: empty
+            .thenReturn(Optional.of(existingPlayer)); // Second check after race: exists
+        when(playerService.registerPlayer("raceuser", "raceuser@game.local", "password123"))
+            .thenThrow(new IllegalArgumentException("Player with username raceuser already exists"));
+        when(idiomGameService.submitAnswer(15L, "一心一意", 50, 0))
+            .thenReturn(mockResult);
+
+        // When & Then
+        mockMvc.perform(post("/api/idiom-game/submit")
+                .param("playerId", "raceuser")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.isCorrect").value(true));
+
+        verify(playerService).registerPlayer("raceuser", "raceuser@game.local", "password123");
+        verify(idiomGameService).submitAnswer(15L, "一心一意", 50, 0);
+    }
+
+    @Test
+    void getHint_PlayerCreationRaceCondition_HandlesAlreadyExists() throws Exception {
+        // Given: Simulate race condition in hint endpoint
+        Player existingPlayer = createPlayer(20L, "hintuser");
+        IdiomGameService.IdiomHint mockHint = new IdiomGameService.IdiomHint(
+            1,
+            "💡 First character hint",
+            10
+        );
+
+        when(playerService.getPlayerByUsername("hintuser"))
+            .thenReturn(Optional.empty())
+            .thenReturn(Optional.of(existingPlayer));
+        when(playerService.registerPlayer("hintuser", "hintuser@game.local", "password123"))
+            .thenThrow(new IllegalArgumentException("Player with username hintuser already exists"));
+        when(idiomGameService.getHint(20L, 1))
+            .thenReturn(mockHint);
+
+        // When & Then
+        mockMvc.perform(post("/api/idiom-game/hint/1")
+                .param("playerId", "hintuser"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.level").value(1));
+
+        verify(playerService).registerPlayer("hintuser", "hintuser@game.local", "password123");
+        verify(idiomGameService).getHint(20L, 1);
+    }
+
+    @Test
+    void startGame_PlayerCreationRaceCondition_HandlesAlreadyExists() throws Exception {
+        // Given: Simulate race condition in startGame endpoint
+        Player existingPlayer = createPlayer(25L, "startuser");
+        IdiomGameService.IdiomGameState mockGameState = createMockGameState();
+
+        when(playerService.getPlayerByUsername("startuser"))
+            .thenReturn(Optional.empty())
+            .thenReturn(Optional.of(existingPlayer));
+        when(playerService.registerPlayer("startuser", "startuser@game.local", "password123"))
+            .thenThrow(new IllegalArgumentException("Player with username startuser already exists"));
+        when(idiomGameService.startGame(25L, DifficultyLevel.EASY))
+            .thenReturn(mockGameState);
+
+        // When & Then
+        mockMvc.perform(get("/api/idiom-game/start")
+                .param("difficulty", "EASY")
+                .param("playerId", "startuser"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.characterCount").value(4));
+
+        verify(playerService).registerPlayer("startuser", "startuser@game.local", "password123");
+        verify(idiomGameService).startGame(25L, DifficultyLevel.EASY);
+    }
 }
