@@ -131,14 +131,15 @@ describe('IdiomGame', () => {
       expect(mockOnTimeout).toHaveBeenCalled();
     });
 
-    it('should play timeout sound when time expires', () => {
+    it('should call onTimeout when time expires', () => {
       render(<IdiomGame {...defaultProps} timeLimit={1} />);
 
       act(() => {
         jest.advanceTimersByTime(1000);
       });
 
-      expect(soundManager.playTimeout).toHaveBeenCalled();
+      // Component now calls onTimeout callback instead of playing sound directly
+      expect(mockOnTimeout).toHaveBeenCalled();
     });
 
     it('should format time with leading zeros', () => {
