@@ -181,7 +181,38 @@ class ConfigurationServiceTest {
         verify(objectMapper).readValue(anyString(), eq(Map.class));
     }
 
-    // Note: Parse error test removed - IOException handling is covered by integration tests
+    @Test
+    void testLoadConfigurationAsMap_ParseError_ThrowsException() throws Exception {
+        // Setup: Test malformed JSON that causes ObjectMapper to fail
+        String malformedJson = "{invalid json content}";
+        ConfigCache malformedCache = ConfigCache.builder()
+            .configKey(testConfigKey)
+            .configValue(malformedJson)
+            .configType(ConfigType.IDIOM)
+            .checksum(testChecksum)
+            .lastLoadedAt(LocalDateTime.now())
+            .description("Test config")
+            .build();
+        ReflectionTestUtils.setField(malformedCache, "id", 1L);
+
+        when(configCacheRepository.findByConfigKey(testConfigKey))
+            .thenReturn(Optional.of(malformedCache));
+        when(resourceLoader.getResource(anyString())).thenReturn(resource);
+        when(resource.exists()).thenReturn(true);
+        when(resource.getInputStream())
+            .thenReturn(new ByteArrayInputStream(malformedJson.getBytes(StandardCharsets.UTF_8)));
+
+        // Use real ObjectMapper to trigger actual IOException
+        ConfigurationService realService = new ConfigurationService(
+            configCacheRepository, resourceLoader, new ObjectMapper());
+
+        // Execute & Verify
+        assertThatThrownBy(() -> realService.loadConfigurationAsMap(testConfigKey))
+            .isInstanceOf(RuntimeException.class)
+            .hasMessageContaining("Failed to parse configuration")
+            .hasMessageContaining(testConfigKey)
+            .hasCauseInstanceOf(IOException.class);
+    }
 
     // ========================================================================
     // loadConfigurationAs() Tests
@@ -208,7 +239,38 @@ class ConfigurationServiceTest {
         verify(objectMapper).readValue(anyString(), eq(TestConfigClass.class));
     }
 
-    // Note: Parse error test removed - IOException handling is covered by integration tests
+    @Test
+    void testLoadConfigurationAs_ParseError_ThrowsException() throws Exception {
+        // Setup: Test malformed JSON that causes ObjectMapper to fail
+        String malformedJson = "{invalid json content}";
+        ConfigCache malformedCache = ConfigCache.builder()
+            .configKey(testConfigKey)
+            .configValue(malformedJson)
+            .configType(ConfigType.IDIOM)
+            .checksum(testChecksum)
+            .lastLoadedAt(LocalDateTime.now())
+            .description("Test config")
+            .build();
+        ReflectionTestUtils.setField(malformedCache, "id", 1L);
+
+        when(configCacheRepository.findByConfigKey(testConfigKey))
+            .thenReturn(Optional.of(malformedCache));
+        when(resourceLoader.getResource(anyString())).thenReturn(resource);
+        when(resource.exists()).thenReturn(true);
+        when(resource.getInputStream())
+            .thenReturn(new ByteArrayInputStream(malformedJson.getBytes(StandardCharsets.UTF_8)));
+
+        // Use real ObjectMapper to trigger actual IOException
+        ConfigurationService realService = new ConfigurationService(
+            configCacheRepository, resourceLoader, new ObjectMapper());
+
+        // Execute & Verify
+        assertThatThrownBy(() -> realService.loadConfigurationAs(testConfigKey, TestConfigClass.class))
+            .isInstanceOf(RuntimeException.class)
+            .hasMessageContaining("Failed to parse configuration")
+            .hasMessageContaining(testConfigKey)
+            .hasCauseInstanceOf(IOException.class);
+    }
 
     // ========================================================================
     // reloadConfiguration() Tests
@@ -481,6 +543,25 @@ class ConfigurationServiceTest {
 
         // Verify: Should have attempted the check
         verify(configCacheRepository).findAll();
+    }
+
+    // ========================================================================
+    // Private Method Tests (using reflection for edge case coverage)
+    // ========================================================================
+
+    @Test
+    void testCalculateChecksum_Success() throws Exception {
+        // Setup: Access private method using reflection
+        java.lang.reflect.Method calculateChecksumMethod = ConfigurationService.class
+            .getDeclaredMethod("calculateChecksum", String.class);
+        calculateChecksumMethod.setAccessible(true);
+
+        // Execute
+        String result = (String) calculateChecksumMethod.invoke(configurationService, testConfigContent);
+
+        // Verify: SHA-256 produces 64-character hex string
+        assertThat(result).hasSize(64);
+        assertThat(result).matches("^[a-f0-9]{64}$");
     }
 
     // ========================================================================
