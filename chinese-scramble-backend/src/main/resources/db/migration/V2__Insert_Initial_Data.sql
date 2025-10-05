@@ -38,9 +38,9 @@ VALUES
 -- IMPORTANT: Change this password immediately in production!
 -- ============================================================================
 
-INSERT INTO players (username, email, password_hash, role, active)
+INSERT INTO players (id, username, email, password_hash, role, active)
 VALUES
-    ('admin', 'admin@chinesescramble.gov.sg',
+    (1, 'admin', 'admin@chinesescramble.gov.sg',
      '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
      'ADMIN', TRUE);
 
@@ -50,23 +50,26 @@ VALUES
 -- All sample users have password: Player123!
 -- ============================================================================
 
-INSERT INTO players (username, email, password_hash, role, active, last_login_at)
+INSERT INTO players (id, username, email, password_hash, role, active, last_login_at)
 VALUES
-    ('玩家001', 'player1@example.com',
+    (2, '玩家001', 'player1@example.com',
      '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
-     'PLAYER', TRUE, DATEADD('DAY', -2, CURRENT_TIMESTAMP)),
+     'PLAYER', TRUE, '2025-10-03 15:00:00'),
 
-    ('张伟', 'zhangwei@example.com',
+    (3, '张伟', 'zhangwei@example.com',
      '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
-     'PLAYER', TRUE, DATEADD('DAY', -1, CURRENT_TIMESTAMP)),
+     'PLAYER', TRUE, '2025-10-04 15:00:00'),
 
-    ('李娜', 'lina@example.com',
+    (4, '李娜', 'lina@example.com',
      '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
-     'PLAYER', TRUE, DATEADD('HOUR', -3, CURRENT_TIMESTAMP)),
+     'PLAYER', TRUE, '2025-10-05 12:00:00'),
 
-    ('王芳', 'wangfang@example.com',
+    (5, '王芳', 'wangfang@example.com',
      '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
-     'PLAYER', TRUE, DATEADD('HOUR', -5, CURRENT_TIMESTAMP));
+     'PLAYER', TRUE, '2025-10-05 10:00:00');
+
+-- Reset the sequence to start from 6 (next available ID)
+ALTER TABLE players ALTER COLUMN id RESTART WITH 6;
 
 -- ============================================================================
 -- Sample Idiom Scores: For Leaderboard Testing
@@ -170,17 +173,17 @@ VALUES
 -- FIRST_WIN achievements
 INSERT INTO achievements (player_id, achievement_type, title, description, unlocked_at, metadata)
 VALUES
-    (2, 'FIRST_WIN', '首次胜利', '完成第一个游戏', DATEADD('DAY', -2, CURRENT_TIMESTAMP), '{"game_type":"IDIOM","score":450}'),
-    (3, 'FIRST_WIN', '首次胜利', '完成第一个游戏', DATEADD('DAY', -1, CURRENT_TIMESTAMP), '{"game_type":"IDIOM","score":470}'),
-    (4, 'FIRST_WIN', '首次胜利', '完成第一个游戏', DATEADD('HOUR', -3, CURRENT_TIMESTAMP), '{"game_type":"IDIOM","score":490}'),
-    (5, 'FIRST_WIN', '首次胜利', '完成第一个游戏', DATEADD('HOUR', -5, CURRENT_TIMESTAMP), '{"game_type":"IDIOM","score":440}');
+    (2, 'FIRST_WIN', '首次胜利', '完成第一个游戏', '2025-10-03 15:00:00', '{"game_type":"IDIOM","score":450}'),
+    (3, 'FIRST_WIN', '首次胜利', '完成第一个游戏', '2025-10-04 15:00:00', '{"game_type":"IDIOM","score":470}'),
+    (4, 'FIRST_WIN', '首次胜利', '完成第一个游戏', '2025-10-05 12:00:00', '{"game_type":"IDIOM","score":490}'),
+    (5, 'FIRST_WIN', '首次胜利', '完成第一个游戏', '2025-10-05 10:00:00', '{"game_type":"IDIOM","score":440}');
 
 -- PERFECT_SCORE achievements (100% accuracy, no hints)
 INSERT INTO achievements (player_id, achievement_type, title, description, unlocked_at, metadata)
 VALUES
-    (2, 'PERFECT_SCORE', '完美主义者', '100%准确率且不使用提示完成游戏', DATEADD('DAY', -1, CURRENT_TIMESTAMP), '{"idiom":"画蛇添足","score":520}'),
-    (3, 'PERFECT_SCORE', '完美主义者', '100%准确率且不使用提示完成游戏', DATEADD('DAY', -1, CURRENT_TIMESTAMP), '{"idiom":"亡羊补牢","score":550}'),
-    (4, 'PERFECT_SCORE', '完美主义者', '100%准确率且不使用提示完成游戏', DATEADD('HOUR', -3, CURRENT_TIMESTAMP), '{"idiom":"掩耳盗铃","score":490}');
+    (2, 'PERFECT_SCORE', '完美主义者', '100%准确率且不使用提示完成游戏', '2025-10-04 15:00:00', '{"idiom":"画蛇添足","score":520}'),
+    (3, 'PERFECT_SCORE', '完美主义者', '100%准确率且不使用提示完成游戏', '2025-10-04 15:00:00', '{"idiom":"亡羊补牢","score":550}'),
+    (4, 'PERFECT_SCORE', '完美主义者', '100%准确率且不使用提示完成游戏', '2025-10-05 12:00:00', '{"idiom":"掩耳盗铃","score":490}');
 
 -- ============================================================================
 -- Sample Game Sessions: Active and Completed
@@ -190,19 +193,19 @@ VALUES
 INSERT INTO game_sessions (player_id, game_type, difficulty, status, started_at, completed_at, final_score)
 VALUES
     (2, 'IDIOM', 'EASY', 'COMPLETED',
-     DATEADD('DAY', -2, CURRENT_TIMESTAMP),
-     DATEADD('SECOND', 45, DATEADD('DAY', -2, CURRENT_TIMESTAMP)),
+     '2025-10-03 15:00:00',
+     '2025-10-03 15:00:45',
      450),
     (3, 'IDIOM', 'MEDIUM', 'COMPLETED',
-     DATEADD('DAY', -1, CURRENT_TIMESTAMP),
-     DATEADD('SECOND', 72, DATEADD('DAY', -1, CURRENT_TIMESTAMP)),
+     '2025-10-04 15:00:00',
+     '2025-10-04 15:01:12',
      550);
 
 -- Active session (for testing session expiry)
 INSERT INTO game_sessions (player_id, game_type, difficulty, status, started_at, session_data)
 VALUES
     (5, 'IDIOM', 'MEDIUM', 'ACTIVE',
-     DATEADD('MINUTE', -10, CURRENT_TIMESTAMP),
+     '2025-10-05 14:50:00',
      '{"idiom":"自相矛盾","scrambled":["矛","自","盾","相"],"timeRemaining":110}');
 
 -- ============================================================================
@@ -212,8 +215,8 @@ VALUES
 -- Hints used in completed sessions
 INSERT INTO hint_usage (game_session_id, hint_level, penalty_applied, used_at, hint_content)
 VALUES
-    (1, 1, 10, DATEADD('SECOND', 30, DATEADD('DAY', -2, CURRENT_TIMESTAMP)), '第一个字：一'),
-    (2, 1, 10, DATEADD('SECOND', 45, DATEADD('DAY', -1, CURRENT_TIMESTAMP)), '第一个字：亡');
+    (1, 1, 10, '2025-10-03 15:00:30', '第一个字：一'),
+    (2, 1, 10, '2025-10-04 15:00:45', '第一个字：亡');
 
 -- ============================================================================
 -- End of Migration V2
